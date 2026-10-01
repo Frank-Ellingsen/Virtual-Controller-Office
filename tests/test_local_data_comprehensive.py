@@ -27,11 +27,11 @@ def test_statlig_dimension_primary_keys_unique(statlig_db):
         ("dimaccount", "Konto"),
         ("dimaccountclass", "Kontoklasse"),
         ("dimdate", "DatoNokkel"),
-        ("dimforecastversion", "Versjonsnokkel"),
+        ("dimforecastversion", "Versjon"),
         ("dimorganization", "Organisasjonsnokkel"),
-        ("dimpositiongroup", "Stillingsgruppenokkel"),
+        ("dimpositiongroup", "Stillingsgruppe"),
         ("dimproject", "Prosjekt"),
-        ("dimstudyprogram", "Studieprogramkode"),
+        ("dimstudyprogram", "Studieprogram"),
     ]
     for table, pk in pk_checks:
         sql = f"SELECT count(DISTINCT {pk}) = count(*), count(*) FROM {table};"
@@ -156,7 +156,7 @@ def test_hydro_power_physical_capacity_and_conservation(hydro_db):
             GROUP BY PlantID
         ) p
         JOIN (
-            SELECT PlantID, sum(Reported_MWh) as Sum_Reported 
+            SELECT PlantID, sum(Reported_Total_MWh) as Sum_Reported 
             FROM fact_reporting 
             GROUP BY PlantID
         ) r ON p.PlantID = r.PlantID;
