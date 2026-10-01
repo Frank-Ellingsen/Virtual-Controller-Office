@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <!-- Business Context Selector & Upload Controls -->
+        <!-- Business Context, API Controls & Upload Controls -->
         <div class="flex items-center space-x-3 flex-wrap">
             <div class="flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
                 <span class="text-xs text-slate-400 font-medium">Business Context:</span>
@@ -33,11 +33,38 @@
                 </select>
             </div>
 
+            <!-- API Provider Selector -->
+            <div class="flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="text-xs text-slate-400 font-medium">API Provider:</span>
+                <select id="apiProviderSelect" onchange="onApiProviderChanged(event)" class="bg-transparent text-xs font-semibold text-indigo-400 focus:outline-none cursor-pointer">
+                    <option value="gemini">Google Gemini</option>
+                    <option value="ollama">Ollama (Local)</option>
+                    <option value="lm_studio">LM Studio (Local)</option>
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic Claude</option>
+                    <option value="serper">Serper Search API</option>
+                </select>
+            </div>
+
+            <!-- API Key Input Field -->
+            <div class="flex items-center space-x-1.5 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                <span class="text-xs text-slate-400 font-medium">API Key:</span>
+                <input type="password" id="apiKeyInput" placeholder="Enter key..." onchange="saveApiSettings()"
+                    class="bg-transparent text-xs text-slate-100 focus:outline-none w-28 placeholder-slate-500 font-mono" />
+                <button type="button" onclick="toggleApiKeyVisibility()" class="text-xs text-slate-400 hover:text-slate-200" title="Toggle Key Visibility">
+                    <span id="apiKeyEyeIcon">👁️</span>
+                </button>
+            </div>
+
+            <button onclick="saveApiSettings()" id="btnSaveApiConfig" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition shadow flex items-center gap-1">
+                <span>🔑</span> Save
+            </button>
+
             <button onclick="openUploadModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3.5 py-1.5 rounded-lg font-medium transition shadow flex items-center gap-1.5">
                 <span>📤</span> Upload Data / Knowledge
             </button>
 
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span id="backendStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 ● FastAPI Backend Online
             </span>
         </div>
@@ -277,11 +304,105 @@
         let activeTaskId = null;
         let definedBusinesses = [];
         let currentBusinessId = "statlig_virksomhet";
+        let currentApiProvider = "gemini";
+        let currentApiKey = "";
 
         window.addEventListener('DOMContentLoaded', () => {
+            initApiSettings();
             fetchBusinesses();
             fetchTrajectory();
         });
+
+        function initApiSettings() {
+            const savedProvider = localStorage.getItem('vco_api_provider') || 'gemini';
+            const savedKey = localStorage.getItem('vco_api_key') || '';
+            
+            currentApiProvider = savedProvider;
+            currentApiKey = savedKey;
+
+            const providerSelect = document.getElementById('apiProviderSelect');
+            const keyInput = document.getElementById('apiKeyInput');
+
+            if (providerSelect) providerSelect.value = savedProvider;
+            if (keyInput) keyInput.value = savedKey;
+
+            updateApiKeyPlaceholder();
+            if (savedKey) {
+                syncApiSettingsToBackend(savedProvider, savedKey);
+            }
+        }
+
+        function onApiProviderChanged(e) {
+            currentApiProvider = e.target.value;
+            localStorage.setItem('vco_api_provider', currentApiProvider);
+            updateApiKeyPlaceholder();
+            saveApiSettings();
+        }
+
+        function updateApiKeyPlaceholder() {
+            const keyInput = document.getElementById('apiKeyInput');
+            if (!keyInput) return;
+            const placeholders = {
+                'gemini': 'AIzaSy...',
+                'ollama': 'http://localhost:11434',
+                'lm_studio': 'http://localhost:1234',
+                'openai': 'sk-proj-...',
+                'anthropic': 'sk-ant-...',
+                'serper': 'serper_key...'
+            };
+            keyInput.placeholder = placeholders[currentApiProvider] || 'Enter key...';
+        }
+
+        function toggleApiKeyVisibility() {
+            const keyInput = document.getElementById('apiKeyInput');
+            const eyeIcon = document.getElementById('apiKeyEyeIcon');
+            if (keyInput.type === 'password') {
+                keyInput.type = 'text';
+                eyeIcon.innerText = '🔒';
+            } else {
+                keyInput.type = 'password';
+                eyeIcon.innerText = '👁️';
+            }
+        }
+
+        async function saveApiSettings() {
+            const keyInput = document.getElementById('apiKeyInput');
+            const providerSelect = document.getElementById('apiProviderSelect');
+            
+            currentApiProvider = providerSelect ? providerSelect.value : 'gemini';
+            currentApiKey = keyInput ? keyInput.value : '';
+
+            localStorage.setItem('vco_api_provider', currentApiProvider);
+            localStorage.setItem('vco_api_key', currentApiKey);
+
+            await syncApiSettingsToBackend(currentApiProvider, currentApiKey);
+        }
+
+        async function syncApiSettingsToBackend(provider, key) {
+            try {
+                const res = await fetch(`${API_BASE}/config/llm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: provider, api_key: key })
+                });
+                const data = await res.json();
+                
+                const btn = document.getElementById('btnSaveApiConfig');
+                if (btn) {
+                    const origText = btn.innerHTML;
+                    btn.innerHTML = '<span>✓</span> Saved!';
+                    btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
+                    btn.classList.add('bg-emerald-600');
+                    setTimeout(() => {
+                        btn.innerHTML = origText;
+                        btn.classList.remove('bg-emerald-600');
+                        btn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+                    }, 1500);
+                }
+            } catch (err) {
+                console.error("Failed to sync API config to backend:", err);
+            }
+        }
 
         async function fetchBusinesses() {
             try {

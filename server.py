@@ -163,6 +163,51 @@ def get_dashboard():
         return FileResponse(index_path, media_type="text/html")
     return {"message": "Virtual Controller Office API online. Dashboard file not found at root."}
 
+class ApiConfigRequest(BaseModel):
+    provider: str
+    api_key: Optional[str] = ""
+
+API_CONFIG = {
+    "provider": "gemini",
+    "api_key": ""
+}
+
+@app.get("/api/config/llm")
+def get_api_config():
+    masked_key = ""
+    if API_CONFIG["api_key"]:
+        k = API_CONFIG["api_key"]
+        masked_key = k[:4] + "..." + k[-4:] if len(k) > 8 else "***"
+    return {
+        "provider": API_CONFIG["provider"],
+        "has_key": bool(API_CONFIG["api_key"]),
+        "masked_key": masked_key
+    }
+
+@app.post("/api/config/llm")
+def update_api_config(req: ApiConfigRequest):
+    global SERPER_API_KEY
+    API_CONFIG["provider"] = req.provider
+    API_CONFIG["api_key"] = req.api_key
+    
+    if req.provider == "serper" and req.api_key:
+        SERPER_API_KEY = req.api_key
+    elif req.provider == "gemini" and req.api_key:
+        os.environ["GEMINI_API_KEY"] = req.api_key
+        
+    TRAJECTORY_LOGS.append({
+        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "agent": "Agent 1: Supervisor",
+        "action": "API Config Update",
+        "message": f"Updated active API provider to '{req.provider}' (Key set: {bool(req.api_key)})",
+        "status": "INFO"
+    })
+    return {
+        "status": "success",
+        "provider": req.provider,
+        "message": f"API Provider set to '{req.provider}' successfully."
+    }
+
 @app.get("/api/health")
 def health_check():
     db_ready = os.path.exists(DB_PATH)
@@ -171,7 +216,8 @@ def health_check():
         "system": "Virtual Controller Office Supervisor",
         "hitl_active": True,
         "database_ready": db_ready,
-        "live_research_enabled": bool(ENABLE_LIVE_WEB_RESEARCH and SERPER_API_KEY)
+        "live_research_enabled": bool(ENABLE_LIVE_WEB_RESEARCH and (SERPER_API_KEY or API_CONFIG["api_key"])),
+        "active_provider": API_CONFIG["provider"]
     }
 
 @app.post("/api/audit/submit")
