@@ -1,0 +1,19 @@
+Organisasjonsnokkel;Fakultet;Fakultetsnavn;Institutt;Instituttnavn;Koststed;Koststednavn;Koststedtype
+I001K1;FAK-HH;Handelshøyskolen UiA;I001;Institutt for økonomi;I001K1;Institutt for økonomi - drift;Drift
+I001K2;FAK-HH;Handelshøyskolen UiA;I001;Institutt for økonomi;I001K2;Institutt for økonomi - prosjekt;Prosjekt
+I002K1;FAK-HH;Handelshøyskolen UiA;I002;Institutt for strategi og ledelse;I002K1;Institutt for strategi og ledelse - drift;Drift
+I002K2;FAK-HH;Handelshøyskolen UiA;I002;Institutt for strategi og ledelse;I002K2;Institutt for strategi og ledelse - prosjekt;Prosjekt
+I004K1;FAK-HI;Fakultet for helse- og idrettsvitenskap;I004;Institutt for sykepleie og helsefag;I004K1;Institutt for sykepleie og helsefag - drift;Drift
+I004K2;FAK-HI;Fakultet for helse- og idrettsvitenskap;I004;Institutt for sykepleie og helsefag;I004K2;Institutt for sykepleie og helsefag - prosjekt;Prosjekt
+I007K1;FAK-HP;Fakultet for humaniora og pedagogikk;I007;Institutt for fagspråk og pedagogikk;I007K1;Institutt for fagspråk og pedagogikk - drift;Drift
+I007K2;FAK-HP;Fakultet for humaniora og pedagogikk;I007;Institutt for fagspråk og pedagogikk;I007K2;Institutt for fagspråk og pedagogikk - prosjekt;Prosjekt
+I013K1;FAK-SV;Fakultet for samfunnsvitenskap;I013;Institutt for statsvitenskap og sosiologi;I013K1;Institutt for statsvitenskap og sosiologi - drift;Drift
+I013K2;FAK-SV;Fakultet for samfunnsvitenskap;I013;Institutt for statsvitenskap og sosiologi;I013K2;Institutt for statsvitenskap og sosiologi - prosjekt;Prosjekt
+I014K1;FAK-SV;Fakultet for samfunnsvitenskap;I014;Institutt for psykologi;I014K1;Institutt for psykologi - drift;Drift
+I014K2;FAK-SV;Fakultet for samfunnsvitenskap;I014;Institutt for psykologi;I014K2;Institutt for psykologi - prosjekt;Prosjekt
+I016K1;FAK-TR;Fakultet for teknologi og realfag;I016;Institutt for mekatronikk og IKT;I016K1;Institutt for mekatronikk og IKT - drift;Drift
+I016K2;FAK-TR;Fakultet for teknologi og realfag;I016;Institutt for mekatronikk og IKT;I016K2;Institutt for mekatronikk og IKT - prosjekt;Prosjekt
+I017K1;FAK-TR;Fakultet for teknologi og realfag;I017;Institutt for ingeniørvitenskap;I017K1;Institutt for ingeniørvitenskap - drift;Drift
+I017K2;FAK-TR;Fakultet for teknologi og realfag;I017;Institutt for ingeniørvitenskap;I017K2;Institutt for ingeniørvitenskap - prosjekt;Prosjekt
+I019K1;FEL-ADM;Fellesadministrasjon UiA;I019;Økonomi- og virksomhetsstyring;I019K1;Økonomi- og virksomhetsstyring - drift;Drift
+I020K1;FEL-ADM;Fellesadministrasjon UiA;I020;IT og digitalisering;I020K1;IT og digitalisering - drift;Drift

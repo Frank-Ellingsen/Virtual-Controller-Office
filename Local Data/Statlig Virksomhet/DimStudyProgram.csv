@@ -1,0 +1,10 @@
+Studieprogram;Studieprogramnavn;Studienivaa;NormerteStudiepoeng;Institutt;Fakultet;Studiekategori;SatsPerSPE60
+I001BA;Bachelor i økonomi og administrasjon;Bachelor;180;I001;FAK-HH;Kategori 1;54550
+I001MA;Master i industriell økonomi;Master;120;I001;FAK-HH;Kategori 1;54550
+I004BA;Bachelor i sykepleie;Bachelor;180;I004;FAK-HI;Kategori 2;81800
+I004MA;Master i avansert klinisk sykepleie;Master;120;I004;FAK-HI;Kategori 2;81800
+I007BA;Bachelor i pedagogikk;Bachelor;180;I007;FAK-HP;Kategori 1;54550
+I013BA;Bachelor i statsvitenskap og sosiologi;Bachelor;180;I013;FAK-SV;Kategori 1;54550
+I014MA;Profesjonsstudiet i psykologi (RETHOS);Master/Prof;360;I014;FAK-SV;Kategori 2;81800
+I016BA;Bachelor i mekatronikk og ingeniørfag;Bachelor;180;I016;FAK-TR;Kategori 2;81800
+I016MA;Master i cybernetics og robotikk;Master;120;I016;FAK-TR;Kategori 2;81800

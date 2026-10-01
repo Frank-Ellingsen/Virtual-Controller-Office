@@ -1,0 +1,7 @@
+Prosjekt;Prosjektnavn;Finansieringstype;Finansieringskilde;Kontraktsbelop;Budsjett;Frikjop;DirekteDrift;Overhead;Leiested;PåløptKostnad;Inntektsført;Dekningsgrad;%TidGått;%BudsjettForbrukt;Forbruksavvik;RAG_Status;StatusMerknad
+NFR001;NFR-AI: Kunstig intelligens i styring;Bidrag;NFR;12000000;4000000;1800000;1100000;880000;220000;1680000;1680000;0.22;0.65;0.42;-0.23;GUL: Betydelig fremdriftsforsinkelse;Forsinket stipendiatrekruttering og lav fremdrift. Tiltak T003 iverksatt.
+NFR002;NFR-Helse: Pasientsikkerhet i helsefag;Bidrag;NFR;8500000;2800000;1300000;800000;616000;84000;1450000;1450000;0.22;0.52;0.518;-0.002;GRØNN: I rute;I rute iht. prosjektplan og milepæler.
+EU001;EU Horizon: Green Maritime Tech;Bidrag;EU;18500000;6200000;2800000;1800000;1364000;236000;3100000;3100000;0.22;0.50;0.50;0.00;GRØNN: I rute;Green Maritime Tech i rute for Horizon Europe.
+EU002;EU Horizon: Digital Governance;Bidrag;EU;14000000;4500000;2100000;1200000;990000;210000;2150000;2150000;0.22;0.48;0.478;-0.002;GRØNN: I rute;Digital Governance i rute for Horizon Europe.
+EVU001;EVU Videreutdanning for kommuner;Oppdrag;Ekstern;3500000;1200000;450000;450000;300000;0;864000;600000;0.25;0.50;0.72;0.22;RØD: Betydelig merforbruk;Konsulentmerforbruk og tapsrisiko (SRS 9). Tapsavsetning konto 7790/2800. Tiltak T004.
+OPPDRAG01;Oppdragsforskning Batteriteknologi;Oppdrag;Næringsliv;5000000;1800000;750000;550000;450000;50000;890000;890000;0.25;0.50;0.494;-0.006;GRØNN: I rute;Batteriteknologi oppdrag i henhold til leveranseplan.

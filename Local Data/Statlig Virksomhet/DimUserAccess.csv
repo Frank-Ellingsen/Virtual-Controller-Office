@@ -1,0 +1,21 @@
+﻿BrukerEpost;Navn;Fakultet;Institutt;Organisasjonsnokkel;RolleNavn
+okonomidirektor@uia.no;Kjell Økonomidirektør;ALL;ALL;ALL;Sentral_Admin
+universitetsdirektor@uia.no;Siri Universitetsdirektør;ALL;ALL;ALL;Sentral_Admin
+hovedcontroller@uia.no;Arne Hovedcontroller;ALL;ALL;ALL;Sentral_Admin
+dekan.hh@uia.no;Marit Dekan Handelshøyskolen;FAK-HH;ALL;ALL;Dekan
+fakultetscontroller.hh@uia.no;Per Controller HH;FAK-HH;ALL;ALL;Fakultetscontroller
+dekan.tr@uia.no;Olav Dekan Teknologifag;FAK-TR;ALL;ALL;Dekan
+fakultetscontroller.tr@uia.no;Kari Controller TR;FAK-TR;ALL;ALL;Fakultetscontroller
+dekan.sv@uia.no;Svein Dekan Samfunnsvitenskap;FAK-SV;ALL;ALL;Dekan
+dekan.hi@uia.no;Hanne Dekan Helse;FAK-HI;ALL;ALL;Dekan
+dekan.hp@uia.no;Petter Dekan Humaniora;FAK-HP;ALL;ALL;Dekan
+instleder.i001@uia.no;Lars Instituttleder I001;FAK-HH;I001;I001K1;Instituttleder
+instleder.i001@uia.no;Lars Instituttleder I001;FAK-HH;I001;I001K2;Instituttleder
+instleder.i002@uia.no;Ingrid Instituttleder I002;FAK-HH;I002;I002K1;Instituttleder
+instleder.i002@uia.no;Ingrid Instituttleder I002;FAK-HH;I002;I002K2;Instituttleder
+instleder.i016@uia.no;Geir Instituttleder I016;FAK-TR;I016;I016K1;Instituttleder
+instleder.i016@uia.no;Geir Instituttleder I016;FAK-TR;I016;I016K2;Instituttleder
+instleder.i013@uia.no;Mette Instituttleder I013;FAK-SV;I013;I013K1;Instituttleder
+instleder.i013@uia.no;Mette Instituttleder I013;FAK-SV;I013;I013K2;Instituttleder
+prosjektleder.nfr@uia.no;Professor Erik NFR-Leder;FAK-TR;I016;I016K2;Prosjektleder
+prosjektleder.eu@uia.no;Professor Sofia EU-Leder;FAK-HH;I001;I001K2;Prosjektleder

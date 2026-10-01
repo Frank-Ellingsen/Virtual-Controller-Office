@@ -1,0 +1,7 @@
+TiltakID;Organisasjonsnokkel;Prosjekt;Konto;Avviksarsak;Tiltaksbeskrivelse;AnsvarligRolle;StartDatoNokkel;FristDatoNokkel;ForventetEffekt;RealisertEffekt;Status;Prioritet;Sannsynlighet;UseCasesRef
+T001;I013K1;DRIFT;5000;Fallende studenttall og lavere ECTS-inntekt;Ansettelsesstopp og vakansestyring ved I013;Dekan / Instituttleder;20260401;20261231;850000;420000;Pågår;Høy;0.85;Use Case: Fallende studiepoeng
+T002;I016K1;INV001;2080;Akkumulert avsetning over 5 %-grensen (F-05-20);Utarbeide forpliktende investeringsplan for labutstyr;Controller / Instituttleder;20260501;20261031;2400000;1800000;Gjennomført;Høy;0.9;Use Case 1: F-05-20 Avsetningskontroll
+T003;I016K2;NFR001;2180;Forsinket stipendiatrekruttering og lav fremdrift;Rerekruttering og framdriftsoppfølging NFR001;Prosjektleder;20260301;20260930;600000;300000;Pågår;Middels;0.75;Use Case 2: SRS 10 Prosjektkontroll
+T004;I001K2;EVU001;7790;Konsulentmerforbruk og tapsrisiko på oppdrag;Sikre tilleggsavtale med oppdragsgiver EVU;Prosjektleder / Controller;20260601;20261130;150000;0;Forsinket;Høy;0.6;Use Case 3: SRS 9 Tapsoppfølging
+T005;I016K1;DRIFT;6710;Ulovlig direkteanskaffelse > 500k kr uten anbud;Overføre avtale til Innkjøpskontoret for minikonkurranse;Innkjøpsansvarlig;20260515;20260831;0;0;Gjennomført;Høy;0.95;Use Case 5: FOA Innkjøpsavvik
+T006;I004K1;DRIFT;5050;Høyt sykefravær og overtid praksisoppfølging;Etablere vikarpooldeling med Sørlandet Sykehus;Instituttleder / HR;20260401;20261231;350000;180000;Pågår;Middels;0.7;Use Case 6: Lønnsavvik

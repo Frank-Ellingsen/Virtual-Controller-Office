@@ -1,12 +1,16 @@
 import os
+import sys
 import json
 import time
 from typing import List, Dict, Any, Optional
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import duckdb
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts"))
+import file_processor
 
 try:
     import sqlglot
@@ -305,6 +309,76 @@ def execute_safe_sql(req: QueryExecutionRequest):
         return {"columns": columns, "rows": result, "count": len(result)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# -----------------------------------------------------------------------------
+# Business Context & File Ingestion Endpoints
+# -----------------------------------------------------------------------------
+class CreateBusinessRequest(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    category: Optional[str] = "Custom Business"
+
+@app.get("/api/businesses")
+def get_businesses():
+    return {"businesses": file_processor.list_all_businesses()}
+
+@app.post("/api/businesses")
+def create_business(req: CreateBusinessRequest):
+    return file_processor.create_new_business(req.name, req.description, req.category)
+
+@app.post("/api/upload")
+async def upload_knowledge_file(
+    file: UploadFile = File(...),
+    business_id: str = Form(...),
+    new_business_name: Optional[str] = Form(None)
+):
+    try:
+        target_bid = business_id
+        if business_id == "NEW_BUSINESS" and new_business_name:
+            new_biz = file_processor.create_new_business(new_business_name)
+            target_bid = new_biz["id"]
+            
+        content = await file.read()
+        res = file_processor.process_file_upload(content, file.filename, target_bid)
+        
+        # Log to trajectory
+        TRAJECTORY_LOGS.append({
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "agent": "Agent 3: Data Cleaning & Ingestion",
+            "action": f"Ingested {file.filename}",
+            "message": f"Ingested file '{file.filename}' into business '{res['business_name']}'. Summary: {res['summary']}",
+            "status": "SUCCESS"
+        })
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/businesses/{business_id}/summary")
+def get_business_summary(business_id: str):
+    db_path = file_processor.get_business_db_path(business_id)
+    if not os.path.exists(db_path):
+        raise HTTPException(status_code=404, detail="Business database not found.")
+    
+    conn = duckdb.connect(db_path, read_only=True)
+    tables = conn.execute("SHOW TABLES;").fetchall()
+    table_list = [t[0] for t in tables]
+    
+    knowledge_files = []
+    if "knowledge_files" in [t.lower() for t in table_list]:
+        rows = conn.execute("SELECT filename, file_type, file_size_bytes, upload_timestamp, summary FROM knowledge_files ORDER BY upload_timestamp DESC;").fetchall()
+        knowledge_files = [
+            {"filename": r[0], "file_type": r[1], "size": r[2], "timestamp": str(r[3]), "summary": r[4]}
+            for r in rows
+        ]
+    conn.close()
+    
+    return {
+        "business_id": business_id,
+        "db_path": db_path,
+        "tables": table_list,
+        "table_count": len(table_list),
+        "knowledge_files": knowledge_files
+    }
 
 if __name__ == "__main__":
     import uvicorn
