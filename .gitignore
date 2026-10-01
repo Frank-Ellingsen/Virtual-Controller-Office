@@ -43,6 +43,8 @@ venv.bak/
 # Local data & logs (preserve directory structure via .gitkeep)
 data/*
 !data/.gitkeep
+Local Data/*
+!Local Data/.gitkeep
 logs/*
 !logs/.gitkeep
 scratch/

@@ -33,6 +33,100 @@ def get_business_db_path(business_id: str) -> str:
         return os.path.join(DATA_DIR, "controller_office.duckdb")
     return os.path.join(DATA_DIR, f"{slug}.duckdb")
 
+
+def discover_local_data_dirs() -> List[Dict[str, str]]:
+    """Discovers business folders under the Local Data directory and returns their metadata."""
+    if not os.path.exists(LOCAL_DATA_DIR):
+        return []
+
+    discovered = []
+    for entry in sorted(os.listdir(LOCAL_DATA_DIR)):
+        full_path = os.path.join(LOCAL_DATA_DIR, entry)
+        if os.path.isdir(full_path):
+            discovered.append({
+                "id": slugify(entry),
+                "name": entry,
+                "folder": full_path,
+            })
+    return discovered
+
+
+def initialize_local_business_database(business_id: str, source_dir: str = None) -> Dict[str, Any]:
+    """Creates a DuckDB database for a Local Data business folder by ingesting data files in that folder."""
+    source_dir = source_dir or None
+    if source_dir is None:
+        for candidate in discover_local_data_dirs():
+            if candidate["id"] == slugify(business_id):
+                source_dir = candidate["folder"]
+                break
+
+    if not source_dir or not os.path.isdir(source_dir):
+        raise FileNotFoundError(f"No Local Data directory found for business '{business_id}'.")
+
+    db_path = get_business_db_path(business_id)
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    conn = duckdb.connect(db_path)
+    ensure_knowledge_tables(conn)
+
+    file_count = 0
+    table_names = []
+    for filename in sorted(os.listdir(source_dir)):
+        full_path = os.path.join(source_dir, filename)
+        if not os.path.isfile(full_path):
+            continue
+
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in {".csv", ".json", ".txt", ".md", ".log"}:
+            continue
+
+        file_count += 1
+        if ext == ".csv":
+            table_name = f"tbl_{slugify(os.path.splitext(filename)[0])}"
+            sample_text = open(full_path, "r", encoding="utf-8", errors="ignore").read(4096)
+            delim = ';' if ';' in sample_text else ','
+            conn.execute(f"DROP TABLE IF EXISTS {table_name};")
+            conn.execute(f"""
+                CREATE TABLE {table_name} AS
+                SELECT * FROM read_csv_auto('{full_path.replace('\\', '/')}', delim='{delim}', header=True);
+            """)
+            table_names.append(table_name)
+        else:
+            text_content = open(full_path, "r", encoding="utf-8", errors="ignore").read()
+            doc_id = f"text_{int(datetime.now().timestamp() * 1000)}_{len(table_names)}"
+            conn.execute("""
+                INSERT INTO knowledge_text_index VALUES (?, ?, ?, ?, ?, ?);
+            """, (doc_id, doc_id, filename, filename, text_content, datetime.now()))
+
+    conn.close()
+    return {
+        "business_id": slugify(business_id),
+        "db_path": db_path,
+        "file_count": file_count,
+        "table_count": len(table_names),
+        "tables": table_names,
+    }
+
+
+def ensure_local_data_businesses_initialized() -> None:
+    """Initializes any Local Data business folders that have not yet been bootstrapped into a DuckDB database."""
+    registry = load_business_registry()
+    for directory in discover_local_data_dirs():
+        biz_id = directory["id"]
+        db_path = get_business_db_path(biz_id)
+        if os.path.exists(db_path):
+            continue
+        if biz_id not in registry:
+            registry[biz_id] = {
+                "id": biz_id,
+                "name": directory["name"],
+                "description": f"Discovered from Local Data directory '{directory['name']}'",
+                "category": "Custom Local Business",
+                "db_path": db_path,
+            }
+            save_business_registry(registry)
+        initialize_local_business_database(biz_id, directory["folder"])
+
+
 def load_business_registry() -> Dict[str, Dict[str, Any]]:
     """Loads the registered businesses from businesses.json."""
     if os.path.exists(REGISTRY_PATH):
@@ -72,8 +166,9 @@ def list_all_businesses() -> List[Dict[str, Any]]:
     Returns list of all available businesses, combining local directories,
     duckdb database files, and registered business entries.
     """
+    ensure_local_data_businesses_initialized()
     registry = load_business_registry()
-    
+
     # Check Local Data directory for automatic business discovery
     if os.path.exists(LOCAL_DATA_DIR):
         for entry in os.listdir(LOCAL_DATA_DIR):
