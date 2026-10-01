@@ -129,7 +129,7 @@ STATE_STORE: Dict[str, Dict[str, Any]] = {}
 TRAJECTORY_LOGS: List[Dict[str, Any]] = []
 
 class AuditRequest(BaseModel):
-    prompt: str = Field(..., example="Audit Q3 logistics cost overruns across European subsidiaries.")
+    prompt: str = Field(..., examples=["Audit Q3 logistics cost overruns across European subsidiaries."])
     user_id: str = Field(default="controller_admin")
 
 class HITLApproval(BaseModel):
