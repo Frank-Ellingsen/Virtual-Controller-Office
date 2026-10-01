@@ -208,14 +208,73 @@ def update_api_config(req: ApiConfigRequest):
         "message": f"API Provider set to '{req.provider}' successfully."
     }
 
+def load_controlling_thresholds() -> Dict[str, Dict[str, Any]]:
+    """Reads active controlling thresholds from dim_thresholds in DuckDB."""
+    try:
+        conn = get_db_connection(read_only=True)
+        rows = conn.execute("SELECT threshold_id, parameter_name, threshold_value, unit, action_trigger FROM dim_thresholds").fetchall()
+        conn.close()
+        thresholds = {}
+        for r in rows:
+            thresholds[r[0]] = {
+                "parameter_name": r[1],
+                "value": r[2],
+                "unit": r[3],
+                "action_trigger": r[4]
+            }
+        return thresholds
+    except Exception:
+        return {
+            "TH-03": {"parameter_name": "PVM Materiality Variance Alert", "value": 50000.0, "unit": "USD", "action_trigger": "TRIGGER_HITL_GATE"},
+            "TH-04": {"parameter_name": "Carrier Fuel Surcharge Contractual Cap", "value": 15.0, "unit": "PERCENT", "action_trigger": "ENFORCE_P1_SAVINGS"}
+        }
+
+@app.get("/api/thresholds")
+def get_thresholds():
+    """Returns active threshold parameters from DuckDB dim_thresholds."""
+    return {"thresholds": load_controlling_thresholds()}
+
+@app.post("/api/audit/evaluate-variance")
+def evaluate_variance_overrun(actual_variance_usd: float = 240000.0, fuel_rate_inc_pct: float = 34.3):
+    """Evaluates financial variances against DuckDB dim_thresholds."""
+    thresholds = load_controlling_thresholds()
+    pvm_thresh = thresholds.get("TH-03", {}).get("value", 50000.0)
+    fuel_thresh = thresholds.get("TH-04", {}).get("value", 15.0)
+
+    alerts = []
+    if actual_variance_usd > pvm_thresh:
+        alerts.append({
+            "threshold_id": "TH-03",
+            "severity": "HIGH",
+            "message": f"Variance of ${actual_variance_usd:,.2f} exceeds materiality limit of ${pvm_thresh:,.2f} USD.",
+            "action": "TRIGGER_HITL_GATE"
+        })
+
+    if fuel_rate_inc_pct > fuel_thresh:
+        alerts.append({
+            "threshold_id": "TH-04",
+            "severity": "CRITICAL",
+            "message": f"Fuel rate increase of +{fuel_rate_inc_pct:.1f}% exceeds contractual cap of {fuel_thresh:.1f}%.",
+            "action": "ENFORCE_P1_SAVINGS"
+        })
+
+    return {
+        "evaluated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "variance_status": "OVERRUN_DETECTED" if alerts else "ON_TARGET",
+        "alerts_count": len(alerts),
+        "alerts": alerts
+    }
+
 @app.get("/api/health")
 def health_check():
     db_ready = os.path.exists(DB_PATH)
+    thresholds = load_controlling_thresholds()
     return {
         "status": "online",
         "system": "Virtual Controller Office Supervisor",
         "hitl_active": True,
         "database_ready": db_ready,
+        "active_thresholds_loaded": len(thresholds),
         "live_research_enabled": bool(ENABLE_LIVE_WEB_RESEARCH and (SERPER_API_KEY or API_CONFIG["api_key"])),
         "active_provider": API_CONFIG["provider"]
     }
