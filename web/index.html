@@ -77,18 +77,26 @@
         <div class="lg:col-span-2 space-y-6">
 
             <!-- 1. Active Business Context Banner -->
-            <section id="businessBanner" class="bg-slate-800 border border-emerald-500/30 rounded-xl p-4 shadow-lg flex justify-between items-center">
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Active Entity:</span>
-                        <h2 id="activeBizName" class="text-sm font-bold text-slate-100">Statlig Virksomhet (DFØ / SRS)</h2>
+            <section id="businessBanner" class="bg-slate-800 border border-emerald-500/30 rounded-xl p-4 shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Active Topic / Entity:</span>
+                        <select id="businessSelect" onchange="onBusinessChanged(event)" class="bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1 text-xs text-emerald-300 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <button onclick="openNewTopicModal()" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-300 px-2 py-1 rounded border border-slate-600 font-medium transition flex items-center gap-1" title="Add New Business Topic">
+                            <span>➕</span> Add Topic
+                        </button>
                     </div>
-                    <p id="activeBizDesc" class="text-xs text-slate-400 mt-0.5">State Education & Research Institution under DFØ & SRS regulations</p>
+                    <p id="activeBizDesc" class="text-xs text-slate-400">State Education & Research Institution under DFØ & SRS regulations</p>
                 </div>
-                <div class="text-right">
+                <div class="flex items-center gap-3">
                     <span id="activeBizTableBadge" class="text-xs px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-emerald-400 font-mono">
-                        23 Ingested Tables
+                        0 Ingested Tables
                     </span>
+                    <button onclick="openUploadModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 shadow">
+                        <span>📤</span> Upload Data
+                    </button>
                 </div>
             </section>
 
@@ -298,9 +306,47 @@
         </div>
     </div>
 
+    <!-- New Business Topic Registration Modal -->
+    <div id="newTopicModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="text-base font-semibold text-slate-100 flex items-center gap-2">
+                    <span>🏢</span> Register New Business Topic / Entity
+                </h3>
+                <button onclick="closeNewTopicModal()" class="text-slate-400 hover:text-slate-200 text-lg font-bold">&times;</button>
+            </div>
+            <form id="newTopicForm" onsubmit="handleCreateTopicSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Business Topic Name</label>
+                    <input type="text" id="topicNameInput" required placeholder="e.g., Premier League & Sports Analytics" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Category / Domain</label>
+                    <select id="topicCategoryInput" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        <option value="Sports & Entertainment Analytics">Sports & Entertainment Analytics</option>
+                        <option value="Defense & Maritime Engineering">Defense & Maritime Engineering</option>
+                        <option value="Public Sector / Government">Public Sector / Government</option>
+                        <option value="Commercial Supply Chain">Commercial Supply Chain</option>
+                        <option value="Financial & Banking Audit">Financial & Banking Audit</option>
+                        <option value="Energy & Utilities">Energy & Utilities</option>
+                        <option value="General Commercial">General Commercial</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Description</label>
+                    <textarea id="topicDescInput" rows="2" placeholder="e.g., Match stats, financial data, performance indicators..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                    <button type="button" onclick="closeNewTopicModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs px-4 py-2 rounded-lg font-medium transition">Cancel</button>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-5 py-2 rounded-lg font-medium transition shadow">Create Topic</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript Handler -->
     <script>
-        const API_BASE = "http://localhost:8000/api";
+        const API_BASE = window.location.port === '8000' ? '/api' : 'http://localhost:8000/api';
         let activeTaskId = null;
         let definedBusinesses = [];
         let currentBusinessId = "statlig_virksomhet";
@@ -413,28 +459,33 @@
                 const mainSelect = document.getElementById('businessSelect');
                 const uploadSelect = document.getElementById('uploadBusinessSelect');
                 
-                mainSelect.innerHTML = '';
-                uploadSelect.innerHTML = '';
+                if (mainSelect) mainSelect.innerHTML = '';
+                if (uploadSelect) uploadSelect.innerHTML = '';
                 
                 definedBusinesses.forEach(b => {
-                    const opt1 = document.createElement('option');
-                    opt1.value = b.id;
-                    opt1.innerText = `${b.name} (${b.table_count} tables)`;
-                    if (b.id === currentBusinessId) opt1.selected = true;
-                    mainSelect.appendChild(opt1);
+                    if (mainSelect) {
+                        const opt1 = document.createElement('option');
+                        opt1.value = b.id;
+                        opt1.innerText = `${b.name} (${b.table_count || 0} tables)`;
+                        if (b.id === currentBusinessId) opt1.selected = true;
+                        mainSelect.appendChild(opt1);
+                    }
 
-                    const opt2 = document.createElement('option');
-                    opt2.value = b.id;
-                    opt2.innerText = b.name;
-                    if (b.id === currentBusinessId) opt2.selected = true;
-                    uploadSelect.appendChild(opt2);
+                    if (uploadSelect) {
+                        const opt2 = document.createElement('option');
+                        opt2.value = b.id;
+                        opt2.innerText = `${b.name} (${b.category || 'Topic'})`;
+                        if (b.id === currentBusinessId) opt2.selected = true;
+                        uploadSelect.appendChild(opt2);
+                    }
                 });
 
-                // Add New Business option to Upload Select
-                const optNew = document.createElement('option');
-                optNew.value = "NEW_BUSINESS";
-                optNew.innerText = "+ Register New Business Context...";
-                uploadSelect.appendChild(optNew);
+                if (uploadSelect) {
+                    const optNew = document.createElement('option');
+                    optNew.value = "NEW_BUSINESS";
+                    optNew.innerText = "➕ Register New Business Topic...";
+                    uploadSelect.appendChild(optNew);
+                }
 
                 updateActiveBusinessUI();
             } catch (err) {
@@ -450,10 +501,49 @@
         function updateActiveBusinessUI() {
             const biz = definedBusinesses.find(b => b.id === currentBusinessId);
             if (biz) {
-                document.getElementById('activeBizName').innerText = biz.name;
-                document.getElementById('activeBizDesc').innerText = biz.description;
-                document.getElementById('activeBizTableBadge').innerText = `${biz.table_count} Ingested Tables`;
+                const activeNameElem = document.getElementById('activeBizName');
+                if (activeNameElem) activeNameElem.innerText = biz.name;
+                const activeDescElem = document.getElementById('activeBizDesc');
+                if (activeDescElem) activeDescElem.innerText = biz.description || `${biz.category} Context`;
+                const activeBadgeElem = document.getElementById('activeBizTableBadge');
+                if (activeBadgeElem) activeBadgeElem.innerText = `${biz.table_count || 0} Ingested Tables`;
+                
+                const mainSelect = document.getElementById('businessSelect');
+                if (mainSelect && mainSelect.value !== currentBusinessId) {
+                    mainSelect.value = currentBusinessId;
+                }
                 loadBusinessKnowledgeSummary(currentBusinessId);
+            }
+        }
+
+        function openNewTopicModal() {
+            document.getElementById('newTopicModal').classList.remove('hidden');
+        }
+
+        function closeNewTopicModal() {
+            document.getElementById('newTopicModal').classList.add('hidden');
+        }
+
+        async function handleCreateTopicSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('topicNameInput').value;
+            const category = document.getElementById('topicCategoryInput').value;
+            const description = document.getElementById('topicDescInput').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/businesses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, category: category, description: description })
+                });
+                const newBiz = await res.json();
+                closeNewTopicModal();
+                currentBusinessId = newBiz.id;
+                await fetchBusinesses();
+                document.getElementById('newTopicForm').reset();
+            } catch (err) {
+                console.error("Failed to create topic:", err);
+                alert("Error creating business topic: " + err.message);
             }
         }
 
@@ -476,7 +566,7 @@
                         container.appendChild(item);
                     });
                 } else {
-                    container.innerHTML = `<div class="text-xs text-slate-500 italic p-2">No files or tables ingested yet. Upload a file to populate.</div>`;
+                    container.innerHTML = `<div class="text-xs text-slate-500 italic p-2">No files or tables ingested yet for this topic. Upload a file to populate.</div>`;
                 }
             } catch (err) {
                 console.error("Error loading business summary:", err);
@@ -487,8 +577,10 @@
             document.getElementById('uploadModal').classList.remove('hidden');
             document.getElementById('uploadStatusCard').classList.add('hidden');
             const uploadSelect = document.getElementById('uploadBusinessSelect');
-            uploadSelect.value = currentBusinessId;
-            onUploadBusinessChanged({ target: uploadSelect });
+            if (uploadSelect) {
+                uploadSelect.value = currentBusinessId;
+                onUploadBusinessChanged({ target: uploadSelect });
+            }
         }
 
         function closeUploadModal() {
@@ -525,22 +617,32 @@
             const statusCard = document.getElementById('uploadStatusCard');
             const statusText = document.getElementById('uploadStatusText');
             statusCard.classList.remove('hidden');
-            statusText.innerHTML = `<span class="text-emerald-400">⚡ Ingesting '${file.name}' into Knowledge Database...</span>`;
+            statusText.innerHTML = `<span class="text-emerald-400">⚡ Parsing '${file.name}' & building DuckDB knowledge tables...</span>`;
 
             try {
                 const res = await fetch(`${API_BASE}/upload`, {
                     method: 'POST',
                     body: formData
                 });
+                
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({ detail: res.statusText }));
+                    throw new Error(errData.detail || "Failed to process upload");
+                }
+                
                 const data = await res.json();
 
-                statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Success:</span> ${data.summary}`;
+                statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete:</span> ${data.summary}`;
+                
+                if (data.business_id) {
+                    currentBusinessId = data.business_id;
+                }
                 
                 setTimeout(() => {
                     closeUploadModal();
                     fetchBusinesses();
                     fetchTrajectory();
-                }, 1800);
+                }, 1500);
 
             } catch (err) {
                 console.error("Upload error:", err);

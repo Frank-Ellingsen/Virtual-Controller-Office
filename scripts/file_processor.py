@@ -151,6 +151,20 @@ def load_business_registry() -> Dict[str, Dict[str, Any]]:
             "description": "Global Freight, Transportation & Logistics Variance Audit",
             "category": "Commercial Supply Chain",
             "db_path": os.path.join(DATA_DIR, "controller_office.duckdb")
+        },
+        "umoe_mandal_defense": {
+            "id": "umoe_mandal_defense",
+            "name": "Umoe Mandal Defense & Maritime",
+            "description": "Naval Defense & Composite Shipyard Project Controlling (EAC/ETC)",
+            "category": "Defense & Maritime Engineering",
+            "db_path": os.path.join(DATA_DIR, "umoe_mandal_defense.duckdb")
+        },
+        "premier_league": {
+            "id": "premier_league",
+            "name": "Premier League & Sports Analytics",
+            "description": "English Premier League Match Data, Financial Performance & Operational Metrics",
+            "category": "Sports & Entertainment Analytics",
+            "db_path": os.path.join(DATA_DIR, "premier_league.duckdb")
         }
     }
     save_business_registry(defaults)
@@ -319,14 +333,45 @@ def process_file_upload(file_content: bytes, filename: str, business_id: str) ->
             stored_table = clean_table_name
             summary_info = f"Ingested CSV table '{clean_table_name}' with {row_count} rows and {col_count} columns ({', '.join(cols[:5])}...)"
 
-        elif ext in [".xlsx", ".xls"]:
-            # Process Excel using pandas
+        elif ext in [".xlsx", ".xls", ".xlsm"]:
+            # Process Excel using pandas with openpyxl/xlrd
             excel_df_dict = pd.read_excel(raw_file_path, sheet_name=None)
             sheets_created = []
             total_rows = 0
+            all_text_snippets = []
+            
+            base_fname = slugify(os.path.splitext(filename)[0])
+            sheet_keys = list(excel_df_dict.keys())
             
             for sheet_name, df in excel_df_dict.items():
-                sheet_table_name = f"tbl_{slugify(os.path.splitext(filename)[0])}_{slugify(sheet_name)}"
+                if df is None or df.empty:
+                    continue
+                
+                # Sanitize column names for clean DuckDB queries
+                clean_cols = []
+                seen_cols = set()
+                for i, col in enumerate(df.columns):
+                    c_str = str(col).strip()
+                    c_slug = slugify(c_str) if c_str and c_str.lower() != 'unnamed' else f"col_{i+1}"
+                    if not c_slug:
+                        c_slug = f"col_{i+1}"
+                    original_slug = c_slug
+                    counter = 1
+                    while c_slug in seen_cols:
+                        c_slug = f"{original_slug}_{counter}"
+                        counter += 1
+                    seen_cols.add(c_slug)
+                    clean_cols.append(c_slug)
+                
+                df.columns = clean_cols
+                
+                clean_sheet = slugify(str(sheet_name))
+                if len(sheet_keys) == 1 or clean_sheet in ["sheet1", "sheet_1", "table1", "data"]:
+                    sheet_table_name = f"tbl_{base_fname}"
+                else:
+                    sheet_table_name = f"tbl_{base_fname}_{clean_sheet}"
+                
+                # Register with DuckDB
                 conn.register("tmp_excel_df", df)
                 conn.execute(f"DROP TABLE IF EXISTS {sheet_table_name};")
                 conn.execute(f"CREATE TABLE {sheet_table_name} AS SELECT * FROM tmp_excel_df;")
@@ -334,13 +379,24 @@ def process_file_upload(file_content: bytes, filename: str, business_id: str) ->
                 
                 rows = len(df)
                 total_rows += rows
-                sheets_created.append(f"{sheet_table_name} ({rows} rows)")
+                sheets_created.append(f"{sheet_table_name} ({rows} rows, {len(df.columns)} cols)")
                 if not stored_table:
                     stored_table = sheet_table_name
                     col_count = len(df.columns)
-            
+                
+                # Sample text summary for text search index
+                sample_str = df.head(10).to_string()
+                all_text_snippets.append(f"Sheet: {sheet_name}\nColumns: {', '.join(clean_cols)}\nSample:\n{sample_str}")
+
             row_count = total_rows
-            summary_info = f"Ingested Excel workbook into {len(sheets_created)} sheets: {', '.join(sheets_created)}"
+            summary_info = f"Ingested Excel workbook '{filename}' into {len(sheets_created)} table(s): {', '.join(sheets_created)}"
+            
+            # Index summary text into knowledge text index
+            if all_text_snippets:
+                full_text = f"Excel File: {filename}\n" + "\n\n".join(all_text_snippets)
+                conn.execute("""
+                    INSERT INTO knowledge_text_index VALUES (?, ?, ?, ?, ?, ?);
+                """, (f"text_{file_id}", file_id, filename, filename, full_text, datetime.now()))
 
         elif ext == ".json":
             # Process JSON
