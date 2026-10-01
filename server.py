@@ -435,16 +435,22 @@ def create_business(req: CreateBusinessRequest):
 async def upload_knowledge_file(
     file: UploadFile = File(...),
     business_id: str = Form(...),
-    new_business_name: Optional[str] = Form(None)
+    new_business_name: Optional[str] = Form(None),
+    business_category: Optional[str] = Form(None)
 ):
     try:
         target_bid = business_id
         if business_id == "NEW_BUSINESS" and new_business_name:
-            new_biz = file_processor.create_new_business(new_business_name)
+            new_biz = file_processor.create_new_business(
+                new_business_name,
+                category=business_category or "Custom Business"
+            )
             target_bid = new_biz["id"]
+        elif business_category:
+            file_processor.update_business_category(business_id, business_category)
             
         content = await file.read()
-        res = file_processor.process_file_upload(content, file.filename, target_bid)
+        res = file_processor.process_file_upload(content, file.filename or "upload", target_bid)
         
         # Log to trajectory
         TRAJECTORY_LOGS.append({
@@ -470,9 +476,11 @@ def get_business_summary(business_id: str):
     
     knowledge_files = []
     if "knowledge_files" in [t.lower() for t in table_list]:
-        rows = conn.execute("SELECT filename, file_type, file_size_bytes, upload_timestamp, summary FROM knowledge_files ORDER BY upload_timestamp DESC;").fetchall()
+        columns = {row[1].lower() for row in conn.execute("PRAGMA table_info('knowledge_files')").fetchall()}
+        category_expr = "business_category" if "business_category" in columns else "NULL"
+        rows = conn.execute(f"SELECT filename, file_type, file_size_bytes, upload_timestamp, summary, {category_expr} FROM knowledge_files ORDER BY upload_timestamp DESC;").fetchall()
         knowledge_files = [
-            {"filename": r[0], "file_type": r[1], "size": r[2], "timestamp": str(r[3]), "summary": r[4]}
+            {"filename": r[0], "file_type": r[1], "size": r[2], "timestamp": str(r[3]), "summary": r[4], "business_category": r[5]}
             for r in rows
         ]
     conn.close()

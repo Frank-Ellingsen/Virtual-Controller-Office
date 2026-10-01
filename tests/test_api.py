@@ -1,8 +1,10 @@
 import os
+from io import BytesIO
 
+from openpyxl import Workbook
 from fastapi.testclient import TestClient
 
-from server import app
+from server import app, file_processor
 
 
 client = TestClient(app)
@@ -96,10 +98,42 @@ def test_business_creation_and_upload_flow():
 
     file_response = client.post(
         "/api/upload",
-        data={"business_id": business["id"], "new_business_name": ""},
+        data={"business_id": business["id"], "new_business_name": "", "business_category": "Energy & Utilities"},
         files={"file": ("audit_summary.csv", b"ProjectID;Status\nP1;Active\n", "text/csv")},
     )
     assert file_response.status_code == 200
     payload = file_response.json()
     assert payload["status"] == "success"
     assert payload["filename"] == "audit_summary.csv"
+    assert payload["business_category"] == "Energy & Utilities"
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Forecast Data"
+    sheet.append(["Period", "Revenue"])
+    sheet.append(["2026-Q1", 1250])
+    excel_content = BytesIO()
+    workbook.save(excel_content)
+
+    excel_response = client.post(
+        "/api/upload",
+        data={"business_id": business["id"], "business_category": "Energy & Utilities"},
+        files={"file": ("quarterly_forecast.xlsx", excel_content.getvalue(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert excel_response.status_code == 200, excel_response.text
+    excel_payload = excel_response.json()
+    assert excel_payload["row_count"] == 1
+    assert excel_payload["business_category"] == "Energy & Utilities"
+
+    summary_response = client.get(f"/api/businesses/{business['id']}/summary")
+    assert summary_response.status_code == 200
+    excel_record = next(item for item in summary_response.json()["knowledge_files"] if item["filename"] == "quarterly_forecast.xlsx")
+    assert excel_record["business_category"] == "Energy & Utilities"
+
+    conn = file_processor.duckdb.connect(business["db_path"], read_only=True)
+    category = conn.execute(
+        "SELECT business_category FROM business_context WHERE business_id = ?",
+        [business["id"]],
+    ).fetchone()[0]
+    conn.close()
+    assert category == "Energy & Utilities"

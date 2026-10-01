@@ -249,8 +249,46 @@ def create_new_business(name: str, description: str = "", category: str = "Custo
     db_p = meta["db_path"]
     conn = duckdb.connect(db_p)
     ensure_knowledge_tables(conn)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS business_context (
+            business_id VARCHAR PRIMARY KEY,
+            business_name VARCHAR,
+            business_category VARCHAR,
+            description TEXT,
+            updated_at TIMESTAMP
+        );
+    """)
+    conn.execute("INSERT OR REPLACE INTO business_context VALUES (?, ?, ?, ?, ?);",
+                 (bid, name, category, meta["description"], datetime.now()))
     conn.close()
     
+    return meta
+
+def update_business_category(business_id: str, category: str) -> Dict[str, Any]:
+    """Updates a business category in the registry and its DuckDB knowledge database."""
+    bid = slugify(business_id)
+    registry = load_business_registry()
+    if bid not in registry:
+        raise ValueError(f"Business '{business_id}' is not registered.")
+
+    meta = registry[bid]
+    meta["category"] = category.strip() or meta.get("category", "Custom Business")
+    save_business_registry(registry)
+
+    conn = duckdb.connect(meta.get("db_path", get_business_db_path(bid)))
+    ensure_knowledge_tables(conn)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS business_context (
+            business_id VARCHAR PRIMARY KEY,
+            business_name VARCHAR,
+            business_category VARCHAR,
+            description TEXT,
+            updated_at TIMESTAMP
+        );
+    """)
+    conn.execute("INSERT OR REPLACE INTO business_context VALUES (?, ?, ?, ?, ?);",
+                 (bid, meta["name"], meta["category"], meta.get("description", ""), datetime.now()))
+    conn.close()
     return meta
 
 def ensure_knowledge_tables(conn: duckdb.DuckDBPyConnection):
@@ -265,9 +303,15 @@ def ensure_knowledge_tables(conn: duckdb.DuckDBPyConnection):
             stored_table_name VARCHAR,
             row_count BIGINT,
             column_count INTEGER,
-            summary VARCHAR
+            summary VARCHAR,
+            business_category VARCHAR
         );
     """)
+    knowledge_file_columns = {
+        row[1].lower() for row in conn.execute("PRAGMA table_info('knowledge_files')").fetchall()
+    }
+    if "business_category" not in knowledge_file_columns:
+        conn.execute("ALTER TABLE knowledge_files ADD COLUMN business_category VARCHAR")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS knowledge_text_index (
             doc_id VARCHAR PRIMARY KEY,
@@ -434,7 +478,10 @@ def process_file_upload(file_content: bytes, filename: str, business_id: str) ->
 
         # Insert metadata record
         conn.execute("""
-            INSERT INTO knowledge_files VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            INSERT INTO knowledge_files (
+                file_id, filename, file_type, file_size_bytes, upload_timestamp,
+                stored_table_name, row_count, column_count, summary, business_category
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             file_id,
             filename,
@@ -444,7 +491,8 @@ def process_file_upload(file_content: bytes, filename: str, business_id: str) ->
             stored_table,
             row_count,
             col_count,
-            summary_info
+            summary_info,
+            registry[bid].get("category", "Custom Business")
         ))
 
         conn.close()
@@ -455,6 +503,7 @@ def process_file_upload(file_content: bytes, filename: str, business_id: str) ->
             "filename": filename,
             "business_id": bid,
             "business_name": registry[bid]["name"],
+            "business_category": registry[bid].get("category", "Custom Business"),
             "stored_table": stored_table,
             "row_count": row_count,
             "file_size": file_size,
