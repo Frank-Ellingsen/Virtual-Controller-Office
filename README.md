@@ -1,89 +1,141 @@
-# 🏢 Agentic Virtual Controller Office — Master Project Index & Directory
+# 🏢 Agentic Virtual Controller Office
 
-Welcome to the **Agentic Virtual Controller Office**, an enterprise-grade multi-agent architecture built for financial controlling, variance analysis, automated audit logging, and supply chain diagnostics.
-
----
-
-## 🛠️ Complete Project Artifact Registry (23 Deliverables)
-
-Below is the structured inventory of all configuration manifests, backend code, evaluation harnesses, report artifacts, and UI templates built for this project.
-
-### 1. 📋 Core Architecture & Agent Topology Manifests
-| Filename | Description / Purpose | Location / Access |
-| :--- | :--- | :--- |
-| **`GEMINI-v2.md`** | **Master Project Onboarding Guide**: Comprehensive handbook detailing the 6-agent hub-and-spoke topology, MCP protocols, security gates, and execution steps. | Studio Panel |
-| **`GEMINI.md`** | **Google Antigravity System Instruction**: Context file loaded directly by Gemini CLI / Antigravity IDE at workspace initialization. | Studio Panel |
-| **`AGENTS.md`** | **Hub-and-Spoke Topology Spec**: Defines Agent 1 (Supervisor), Agents 2–5 (Specialist Workers), and Agent 0 (Meta-Builder). | Studio Panel |
-| **`TOOLS.md`** | **MCP Tool Manifest**: JSON schemas for DuckDB queries, Serper web search, Excel processing, and Power BI theme generators. | Studio Panel |
-| **`HOOKS.md`** | **Security Hooks & Policy Spec**: Code-enforced AST SQL validators (`SELECT`-only) and Human-In-The-Loop (`HITL_Approval_Gate`) specifications. | Studio Panel |
-| **`antigravity_controller_office_setup.zip`** | **Playbook & Skill Bundle**: Zip file containing all 8 specialist skill playbooks (`01-audit-scope-decomposition.md` to `08-powerbi-excel-engineering.md`). | Studio Panel |
+An enterprise-grade, multi-agent financial controlling architecture built for **Project Controllers**, **Financial Analysts**, and **BI Specialists**. The system automates variance analysis (Price-Volume-Mix decomposition), enforces Human-in-the-Loop (HITL) approval gates, and provides real-time audit traceability with local-first SQL engines (DuckDB/SQLite).
 
 ---
 
-### 2. ⚡ Backend Engine & Web UI Interface
-| Filename | Description / Purpose | Location / Access |
-| :--- | :--- | :--- |
-| **`WEB_UI_AND_BACKEND-v2.md`** | **Complete Full-Stack Spec**: Complete Python FastAPI server (`server.py`) with AST SQL security, LangGraph state persistence, Serper research API handler, and HTML5/Tailwind dashboard. | Studio Panel |
-| **`WEB_UI_AND_BACKEND.md`** | **Initial Backend Architecture Spec**: Original version of the FastAPI and Web UI specifications. | Studio Panel |
-| **`test_api.sh`** | **API Integration Test Harness**: `curl` shell script testing endpoints (`/api/health`, `/api/audit/submit`, `/api/hitl/approve`, `/api/research/serper`). | Studio Panel |
-| **`deploy.sh`** | **Docker Container Deployment Script**: Automated bash launcher building the Docker image, provisioning persistent volumes, and running `docker-compose`. | Studio Panel |
+## 🗂️ Project Directory Structure
+
+```text
+Virtual Controller Office/
+├── .github/
+│   └── workflows/
+│       └── eval.yml                  # GitHub Actions CI/CD planning evaluation pipeline
+├── bi/
+│   ├── theme.json                    # Power BI custom dark theme (Slate/Indigo/Emerald)
+│   └── pvm_variance_measures.dax     # Power BI DAX library for PVM variance analysis
+├── data/                             # DuckDB database volume (gitignored)
+│   └── .gitkeep
+├── docs/                             # Architecture specifications & rubrics
+│   ├── GEMINI-v2.md                  # Comprehensive system handbook & onboarding guide
+│   ├── planning_eval_rubric.md       # 100-Point 5-axis planning evaluation rubric
+│   ├── WEB_UI_AND_BACKEND-v2.md      # Full-stack API & UI architecture specification
+│   └── archive/                      # Historical / v1 architecture specs
+├── logs/                             # Audit & execution logs (gitignored)
+│   └── .gitkeep
+├── reports/                          # Audit reports & benchmark deliverables
+│   ├── evaluation_benchmark_results.md # Trajectory robustness benchmark (98.25/100)
+│   └── q3_diagnostic_variance_report-v2.md # Mitigated Q3 audit report & P1 fuel cap
+├── scripts/                          # Deployment & testing utilities
+│   ├── deploy.sh                     # Docker deployment bash script
+│   ├── test_api.ps1                  # Windows PowerShell API test harness
+│   └── test_api.sh                   # Linux/macOS curl API test script
+├── skills/                           # Specialist agent playbooks (01–08)
+│   ├── 01-audit-scope-decomposition.md
+│   ├── 02-hitl-risk-evaluation.md
+│   ├── 03-data-quality-wrangling.md
+│   ├── 04-diagnostic-variance-analysis.md
+│   ├── 05-prognostic-predictive-modeling.md
+│   ├── 06-prescriptive-strategy-matrix.md
+│   ├── 07-multi-stakeholder-narrative.md
+│   └── 08-powerbi-excel-engineering.md
+├── web/
+│   └── index.html                    # Frontend dashboard template (Tailwind CSS)
+├── .env.example                      # Sanitized environment configuration template
+├── .gitignore                        # Comprehensive Python / DuckDB / secret exclusions
+├── AGENTS.md                         # Hub-and-Spoke agent topology manifest (Agents 0–5)
+├── controller_office_eval_suite.py   # Executable multi-step agent planning test runner
+├── docker-compose.yml                # Docker Compose multi-service definition
+├── Dockerfile                        # Container build definition
+├── GEMINI.md                         # Antigravity IDE system instructions
+├── HOOKS.md                          # AST SQL security & HITL gate specifications
+├── index.html                        # Real-time Web UI dashboard
+├── README.md                         # Master documentation & directory index
+├── requirements.txt                  # Python production runtime dependencies
+├── seed_data.py                      # DuckDB star-schema seeder & view creator
+├── server.py                         # FastAPI backend with AST security & HITL endpoints
+└── TOOLS.md                          # MCP tool schemas (DuckDB, Serper, Excel, Power BI)
+```
 
 ---
 
-### 3. 📊 Data Layer, Database Seeder & Analytics
-| Filename | Description / Purpose | Location / Access |
-| :--- | :--- | :--- |
-| **`seed_data.py`** | **DuckDB Analytical Database Seeder**: Generates star-schema tables (`fact_logistics_q3`, `fact_financial_transactions`) and analytical views in `controller_office.duckdb`. | Studio Panel |
-| **`q3_diagnostic_variance_report.md`** | **Initial Audit Report**: Diagnostic Price-Volume-Mix (PVM) analysis of the $1.26M Q3 European logistics cost overrun. | Studio Panel |
-| **`q3_diagnostic_variance_report-v2.md`** | **Mitigated Audit Report**: Updated report reflecting approved **Priority Action P1** (contractual fuel caps enforced, saving $354,000 in Q4). | Studio Panel |
+## 🤖 Hub-and-Spoke Agent Topology
 
----
-
-### 4. 📈 Power BI BI Assets & DAX Modeling
-| Filename | Description / Purpose | Location / Access |
-| :--- | :--- | :--- |
-| **`theme.json`** | **Power BI Custom Dark Theme**: JSON color palette matching the Virtual Web UI dashboard (Slate/Indigo/Emerald/Amber/Rose). | Studio Panel |
-| **`pvm_variance_measures.dax`** | **Power BI DAX Measure Library**: Production DAX code for PVM variance decomposition, fuel surcharge overruns, YTD logic, and dynamic KPI status color formatting. | Studio Panel |
-
----
-
-### 5. 🧪 Evaluation Framework & CI/CD Testing
-| Filename | Description / Purpose | Location / Access |
-| :--- | :--- | :--- |
-| **`planning_eval_rubric.md`** | **5-Axis Planning Rubric Specification**: Detailed 100-point rubric assessing Control Gate Calibration, Step Efficiency, Safety, Error Recovery, and Deliberation Economics. | Studio Panel |
-| **`controller_office_eval_suite.py`** | **Executable Benchmark Harness**: Python evaluation engine scoring multi-step agent execution trajectories across complex controlling test cases. | Studio Panel |
-| **`evaluation_benchmark_results.md`** | **Benchmark Report (98.25/100 Score)**: Comprehensive evaluation results across 4 complex audit scenarios. | Studio Panel |
-| **`eval.yml`** | **GitHub Actions CI/CD Pipeline**: Automated workflow running DuckDB seeding, AST security checks, and trajectory evaluation on every PR/push. | Studio Panel |
-
----
-
-### 6. 🗺️ Studio Visual Apps & Mindmaps
-* **`Agent Mindmap`**: Visual overview of AI agent system design.
-* **`Dashboard Mindmap`**: Design taxonomy for executive and operational dashboards.
-* **`Storytelling Mindmap`**: Quantitative data storytelling frameworks.
-* **`Chart Taxonomy`**: Guide to selecting optimal chart types for business data.
-* **`Data Mindmap`**: Analytics engineering, data modeling, and reporting structures.
-* **`Agentic Map`**: Ecosystem map for agentic RAG and autonomous systems.
+| Agent ID | Agent Role | Core Responsibility | Key Tools / Skills |
+| :--- | :--- | :--- | :--- |
+| **Agent 0** | **Office Meta-Builder** | Codebase maintenance, runtime tuning, skill playbook updates. | File operations, skill builder, sandbox. |
+| **Agent 1** | **Controller Intake Supervisor** | Parses user audit requests, decomposes sub-goals, enforces HITL gates. | `01-audit-scope-decomposition.md`, `02-hitl-risk-evaluation.md` |
+| **Agent 2** | **Data Retrieval & Ingestion** | Connects to DuckDB, SQLite, OneDrive, and Serper web benchmarks. | Read-only SQL queries, hybrid Serper API. |
+| **Agent 3** | **Data Cleaning & Modeling** | Resolves schema inconsistencies, sanitizes nulls, builds star schemas. | `03-data-quality-wrangling.md`, DuckDB transforms. |
+| **Agent 4** | **Controlling Analytics** | Computes Price-Volume-Mix (PVM) variance, forecasts EAC/ETC. | `04-diagnostic-variance-analysis.md`, PVM models. |
+| **Agent 5** | **Reporting & BI Specialist** | Produces cognitive-ergonomic dashboards, DAX measures, executive memos. | `07-multi-stakeholder-narrative.md`, `theme.json`, DAX. |
 
 ---
 
 ## 🚀 Quick-Start Execution Guide
 
-1. **Seed Local Analytics Database**:
-   ```bash
-   python3 seed_data.py
-   ```
-2. **Launch Local Server via Docker**:
-   ```bash
-   chmod +x deploy.sh
-   ./deploy.sh
-   ```
-3. **Run Multi-Step Agent Evaluation Suite**:
-   ```bash
-   python3 controller_office_eval_suite.py
-   ```
-4. **Test Backend API Endpoints**:
-   ```bash
-   chmod +x test_api.sh
-   ./test_api.sh
-   ```
+### 1. Environment Setup
+Clone the repository and install the dependencies:
+
+```bash
+# Optional: create a virtual environment
+python -m venv .venv
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+# Linux / macOS
+source .venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+Copy `.env.example` to `.env` and configure your API keys:
+```bash
+cp .env.example .env
+```
+
+### 2. Seed the Local DuckDB Database
+Populate the local star schema (`data/controller_office.duckdb`) with Q3 logistics records and financial transactions:
+
+```bash
+python seed_data.py
+```
+
+### 3. Launch the FastAPI Backend & Web Dashboard
+Start the local server:
+
+```bash
+python server.py
+# Or with uvicorn directly
+uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+- **Web Dashboard**: [http://localhost:8000/](http://localhost:8000/) or [http://localhost:8000/index.html](http://localhost:8000/index.html)
+- **API Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+
+### 4. Run the Planning Evaluation Suite
+Verify multi-step trajectory quality and AST security gates:
+
+```bash
+python controller_office_eval_suite.py
+```
+
+### 5. Run API Integration Tests
+**Windows PowerShell**:
+```powershell
+.\scripts\test_api.ps1
+```
+
+**Linux / macOS / Bash**:
+```bash
+chmod +x scripts/test_api.sh
+./scripts/test_api.sh
+```
+
+---
+
+## 🛡️ Security, Governance & AST Validation
+
+- **Read-Only SQL Enforcement**: `validate_sql_security` inspects all incoming queries using AST parsing (`sqlglot`/`sqlparse`), strictly disallowing mutating statements (`DROP`, `DELETE`, `UPDATE`, `INSERT`, `ALTER`, `CREATE`, `TRUNCATE`).
+- **Human-in-the-Loop (HITL) Gatekeeper**: High-risk operations (such as budget reallocations or external research executions) halt the supervisor pipeline until explicit confirmation is provided via the Web UI or API.
+- **Credential Protection**: Real API keys (`GEMINI_API_KEY`, `SERPER_API_KEY`) and local databases (`*.duckdb`, `*.sqlite`) are gitignored by design.

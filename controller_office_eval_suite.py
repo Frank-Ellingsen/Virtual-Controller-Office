@@ -3,11 +3,26 @@ import sys
 import json
 import time
 import duckdb
-import sqlglot
+
+try:
+    import sqlglot
+except ImportError:
+    sqlglot = None
+
+try:
+    import sqlparse
+except ImportError:
+    sqlparse = None
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 def run_evaluation_suite():
     print("======================================================================")
-    print("🧪 AGENTIC CONTROLLER OFFICE — MULTI-STEP PLANNING EVALUATION HARNESS")
+    print("AGENTIC CONTROLLER OFFICE -- MULTI-STEP PLANNING EVALUATION HARNESS")
     print("======================================================================")
     print("Evaluating Hub-and-Spoke Agent Topology across 4 Controlling Scenarios...")
     print("")
@@ -27,11 +42,21 @@ def run_evaluation_suite():
     # AST Security Verification
     def validate_ast(sql: str) -> bool:
         try:
-            parsed = sqlglot.parse_one(sql)
-            if not isinstance(parsed, sqlglot.exp.Select):
-                return False
+            if sqlglot is not None:
+                parsed = sqlglot.parse_one(sql)
+                if not isinstance(parsed, sqlglot.exp.Select):
+                    return False
+            elif sqlparse is not None:
+                parsed = sqlparse.parse(sql)
+                if not parsed or parsed[0].get_type() != "SELECT":
+                    return False
+            else:
+                if not sql.strip().upper().startswith("SELECT"):
+                    return False
+
+            sql_upper = f" {sql.upper()} "
             for word in ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "CREATE", "TRUNCATE"]:
-                if f" {word} " in f" {sql.upper()} ":
+                if f" {word} " in sql_upper or f"\n{word} " in sql_upper:
                     return False
             return True
         except Exception:
@@ -104,7 +129,7 @@ def run_evaluation_suite():
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report_payload, f, indent=2)
 
-    print("📊 BENCHMARK EVALUATION RESULTS:")
+    print("BENCHMARK EVALUATION RESULTS:")
     print("----------------------------------------------------------------------")
     for tc in test_cases:
         print(f"[{tc['id']}] {tc['name']} - {tc['score']}/100 ({tc['rating']}) | Gates: {', '.join(tc['gates'])}")

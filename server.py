@@ -7,7 +7,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import duckdb
-import sqlglot
+
+try:
+    import sqlglot
+except ImportError:
+    sqlglot = None
+
+try:
+    import sqlparse
+except ImportError:
+    sqlparse = None
 
 app = FastAPI(
     title="Virtual Controller Office API",
@@ -93,12 +102,21 @@ def validate_sql_security(sql_query: str) -> bool:
     Verifies that the query is strictly a read-only SELECT statement with no mutating clauses.
     """
     try:
-        parsed = sqlglot.parse_one(sql_query)
-        if not isinstance(parsed, sqlglot.exp.Select):
-            return False
-        sql_upper = sql_query.upper()
+        if sqlglot is not None:
+            parsed = sqlglot.parse_one(sql_query)
+            if not isinstance(parsed, sqlglot.exp.Select):
+                return False
+        elif sqlparse is not None:
+            parsed = sqlparse.parse(sql_query)
+            if not parsed or parsed[0].get_type() != "SELECT":
+                return False
+        else:
+            if not sql_query.strip().upper().startswith("SELECT"):
+                return False
+
+        sql_upper = f" {sql_query.upper()} "
         for forbidden in ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "CREATE", "TRUNCATE"]:
-            if f" {forbidden} " in f" {sql_upper} ":
+            if f" {forbidden} " in sql_upper or f"\n{forbidden} " in sql_upper:
                 return False
         return True
     except Exception:

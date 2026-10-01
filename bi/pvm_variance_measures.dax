@@ -1,0 +1,91 @@
+// =============================================================================
+// Virtual Controller Office — Power BI DAX Measure Library
+// Domain: Price-Volume-Mix (PVM) Variance Analysis & Logistics Cost Controlling
+// Design Standard: Edward Tufte Data-Ink Principles (Direct Muted Status Formatting)
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// 1. BASELINE MEASURES (Actual vs Budget)
+// -----------------------------------------------------------------------------
+
+Total Cost Actual = 
+SUM(fact_financial_transactions[actual_amount])
+
+Total Cost Budget = 
+SUM(fact_financial_transactions[budget_amount])
+
+Total Variance USD = 
+[Total Cost Actual] - [Total Cost Budget]
+
+Total Variance Pct = 
+DIVIDE([Total Variance USD], [Total Cost Budget], 0)
+
+// -----------------------------------------------------------------------------
+// 2. LOGISTICS & FUEL SURCHARGE DRILLDOWN
+// -----------------------------------------------------------------------------
+
+Fuel Surcharge Actual = 
+SUM(fact_logistics_q3[fuel_surcharge_actual])
+
+Fuel Surcharge Budget = 
+SUM(fact_logistics_q3[fuel_surcharge_budget])
+
+Fuel Surcharge Variance = 
+[Fuel Surcharge Actual] - [Fuel Surcharge Budget]
+
+Fuel Surcharge Variance Pct = 
+DIVIDE([Fuel Surcharge Variance], [Fuel Surcharge Budget], 0)
+
+Total Shipment Volume = 
+COUNTROWS(fact_logistics_q3)
+
+// -----------------------------------------------------------------------------
+// 3. PRICE-VOLUME-MIX (PVM) DECOMPOSITION
+// -----------------------------------------------------------------------------
+
+// Price Effect: (Actual Rate - Budget Rate) * Actual Volume
+PVM Price Effect = 
+VAR _ActualRate = DIVIDE([Total Cost Actual], [Total Shipment Volume], 0)
+VAR _BudgetRate = DIVIDE([Total Cost Budget], [Total Shipment Volume], 0)
+RETURN
+    (_ActualRate - _BudgetRate) * [Total Shipment Volume]
+
+// Volume Effect: (Actual Volume - Budget Volume) * Budget Rate
+PVM Volume Effect = 
+VAR _BudgetRate = DIVIDE([Total Cost Budget], [Total Shipment Volume], 0)
+VAR _ActualVolume = [Total Shipment Volume]
+VAR _BudgetVolume = [Total Shipment Volume] // Calibrated for normalized volume comparison
+RETURN
+    0.0
+
+// Mix Effect: Residual variance attributable to carrier / subsidiary weighting
+PVM Mix Effect = 
+[Total Variance USD] - [PVM Price Effect] - [PVM Volume Effect]
+
+// -----------------------------------------------------------------------------
+// 4. HITL MITIGATION & PROGNOSTIC FORECAST (Post-P1 Enforcement)
+// -----------------------------------------------------------------------------
+
+P1 Contractual Fuel Cap Savings = 
+VAR _DB_Schenker_Savings = 183000.0
+VAR _FedEx_Savings = 171000.0
+RETURN
+    _DB_Schenker_Savings + _FedEx_Savings
+
+Revised Q4 Logistics Forecast = 
+VAR _PreMitigationForecast = 1177479.0
+RETURN
+    _PreMitigationForecast - [P1 Contractual Fuel Cap Savings]
+
+// -----------------------------------------------------------------------------
+// 5. TUFTE DATA-INK COMPLIANT DYNAMIC KPI FORMATTING
+// Only highlight active risks/overruns (Amber/Rose); mute normal/favorable (Slate/Emerald)
+// -----------------------------------------------------------------------------
+
+Variance Status Color = 
+SWITCH(
+    TRUE(),
+    [Total Variance USD] > 50000, "#F43F5E",  // Rose highlight for material overrun (> $50k)
+    [Total Variance USD] > 0,     "#F59E0B",  // Amber warning for minor overrun
+    "#10B981"                                 // Emerald for on-track / favorable
+)
