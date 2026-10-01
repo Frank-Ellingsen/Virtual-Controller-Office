@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  controller-office:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentic_controller_office
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - DUCKDB_PATH=/app/data/controller_office.duckdb
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - SERPER_API_KEY=${SERPER_API_KEY:-}
+      - ENABLE_LIVE_WEB_RESEARCH=${ENABLE_LIVE_WEB_RESEARCH:-true}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

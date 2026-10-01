@@ -1,0 +1,64 @@
+# Environment & Secrets (CRITICAL: Never commit real API keys)
+.env
+.env.local
+.env.*.local
+
+# Databases & Analytical Stores
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite3
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Local data & logs (preserve directory structure via .gitkeep)
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+scratch/
+
+# IDE & OS Artifacts
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+evaluation_report.json

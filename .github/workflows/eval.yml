@@ -1,0 +1,58 @@
+name: Agentic Controller Office - Evaluation Suite CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  agent-eval-suite:
+    name: Run Agent Planning Robustness & Safety Benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install duckdb pydantic pytest sqlglot fastapi uvicorn
+
+      - name: Initialize DuckDB Analytical Seed Data
+        run: |
+          python seed_data.py
+
+      - name: Execute Multi-Step Planning Evaluation Suite
+        run: |
+          python controller_office_eval_suite.py
+
+      - name: Upload Evaluation Benchmark Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-report
+          path: |
+            evaluation_report.json
+            evaluation_benchmark_results.md
+
+      - name: Check Robustness Quality Gate
+        run: |
+          python -c "
+          import json, sys
+          with open('evaluation_report.json') as f:
+              data = json.load(f)
+          avg_score = data.get('overall_robustness_score', 0)
+          print(f'Overall Robustness Score: {avg_score}/100')
+          if avg_score < 85.0:
+              print('❌ Quality Gate Failed: Overall robustness score below 85.0 threshold!')
+              sys.exit(1)
+          print('✅ Quality Gate Passed!')
+          "
