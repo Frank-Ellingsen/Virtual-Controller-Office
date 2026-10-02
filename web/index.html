@@ -13,7 +13,9 @@
       .tooltip-box {
         visibility: hidden;
         opacity: 0;
-        transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+        transition:
+          opacity 0.2s ease-in-out,
+          visibility 0.2s ease-in-out;
       }
       .has-tooltip:hover .tooltip-box {
         visibility: visible;
@@ -58,6 +60,9 @@
             onchange="onBusinessChanged(event)"
             class="bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none cursor-pointer"
           >
+            <option value="" selected disabled>
+              Select a business topic...
+            </option>
             <!-- Dynamically populated -->
             <option value="statlig_virksomhet">
               Statlig Virksomhet (DFØ / SRS)
@@ -78,6 +83,7 @@
             onchange="onApiProviderChanged(event)"
             class="bg-transparent text-xs font-semibold text-indigo-400 focus:outline-none cursor-pointer"
           >
+            <option value="" selected disabled>Select a provider...</option>
             <option value="gemini">Google Gemini</option>
             <option value="ollama">Ollama (Local)</option>
             <option value="lm_studio">LM Studio (Local)</option>
@@ -155,6 +161,9 @@
                 onchange="onBusinessChanged(event)"
                 class="bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1 text-xs text-emerald-300 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
+                <option value="" selected disabled>
+                  Select a business topic...
+                </option>
                 <!-- Populated dynamically -->
               </select>
               <button
@@ -166,8 +175,13 @@
               </button>
             </div>
             <p id="activeBizDesc" class="text-xs text-slate-400">
-              State Education & Research Institution under DFØ & SRS regulations
+              Select a business topic or add one to continue.
             </p>
+            <p
+              id="businessSelectionMessage"
+              class="text-xs text-amber-300 hidden"
+              role="status"
+            ></p>
           </div>
           <div class="flex items-center gap-3">
             <span
@@ -196,13 +210,17 @@
           >
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-indigo-400 font-bold text-[11px] uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">⚡ Data Pipeline Engine</span>
+                <span
+                  class="text-indigo-400 font-bold text-[11px] uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20"
+                  >⚡ Data Pipeline Engine</span
+                >
                 <h2 class="text-sm font-semibold text-slate-100">
                   Data Sources → 6-Phase Pipeline & 8-Step EDA Workflow
                 </h2>
               </div>
               <p class="text-xs text-slate-400 mt-0.5">
-                Interactive phase-by-phase execution with inline tooltips, AST security checks, PVM variance modeling, and EDA analysis.
+                Interactive phase-by-phase execution with inline tooltips, AST
+                security checks, PVM variance modeling, and EDA analysis.
               </p>
             </div>
             <div class="flex items-center gap-2 flex-wrap">
@@ -227,46 +245,89 @@
 
           <!-- Main 6-Phase Flow Cards -->
           <div class="space-y-3">
-            <div class="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <div
+              class="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-slate-400"
+            >
               <span class="flex items-center gap-1.5 text-[11px]">
-                <span>🔄</span> Flow: Data Sources ↓ 1. Extract ↓ 2. Load raw data ↓ 3. Validate / profile ↓ 4. Transform / clean ↓ 5. Store curated data ↓ 6. EDA
+                <span>🔄</span> Flow: Data Sources ↓ 1. Extract ↓ 2. Load raw
+                data ↓ 3. Validate / profile ↓ 4. Transform / clean ↓ 5. Store
+                curated data ↓ 6. EDA
               </span>
-              <span id="pipelineProgressBadge" class="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+              <span
+                id="pipelineProgressBadge"
+                class="text-emerald-400 font-mono text-[10px] bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20"
+              >
                 0 / 6 Phases Completed
               </span>
             </div>
 
             <!-- Phase Cards Stepper Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5 text-xs">
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2.5 text-xs"
+            >
               <!-- Data Sources Card -->
-              <div class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip">
+              <div
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-300 flex items-center gap-1 text-[11px]">
+                  <span
+                    class="font-bold text-slate-300 flex items-center gap-1 text-[11px]"
+                  >
                     <span>🔌</span> Data Sources
                   </span>
-                  <span class="text-[9px] text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded font-mono">Active</span>
+                  <span
+                    class="text-[9px] text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded font-mono"
+                    >Active</span
+                  >
                 </div>
                 <p class="text-[10px] text-slate-400">
                   DuckDB, XLSX, CSV, Serper API
                 </p>
-                <div class="pt-1 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500">
+                <div
+                  class="pt-1 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500"
+                >
                   <span>Input Layer</span>
-                  <button type="button" onclick="openUploadModal()" class="text-emerald-400 hover:underline">Upload 📤</button>
+                  <button
+                    type="button"
+                    onclick="openUploadModal()"
+                    class="text-emerald-400 hover:underline"
+                  >
+                    Upload 📤
+                  </button>
                 </div>
                 <!-- Tooltip Hover Card -->
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-emerald-400 mb-1">🔌 Data Sources Layer</div>
-                  <p class="text-[10px] text-slate-300">Identifies and connects to underlying operational databases (DuckDB controller_office.duckdb), local uploaded files (XLSX/CSV), and Serper benchmarking APIs.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-emerald-400 mb-1">
+                    🔌 Data Sources Layer
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Identifies and connects to underlying operational databases
+                    (DuckDB controller_office.duckdb), local uploaded files
+                    (XLSX/CSV), and Serper benchmarking APIs.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 1 Card: Extract -->
-              <div id="phaseCard1" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard1"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-200 text-[11px]">1. Extract</span>
-                  <span id="phaseStatus1" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-slate-200 text-[11px]"
+                    >1. Extract</span
+                  >
+                  <span
+                    id="phaseStatus1"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
-                <p class="text-[10px] text-slate-400">Agent 2: Data Retrieval</p>
+                <p class="text-[10px] text-slate-400">
+                  Agent 2: Data Retrieval
+                </p>
                 <div class="pt-1 border-t border-slate-800">
                   <button
                     type="button"
@@ -277,17 +338,34 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-indigo-400 mb-1">Phase 1: Extract</div>
-                  <p class="text-[10px] text-slate-300">Extracts raw operational transactions, logistics records, or spot rate market benchmarks from source systems and local files.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-indigo-400 mb-1">
+                    Phase 1: Extract
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Extracts raw operational transactions, logistics records, or
+                    spot rate market benchmarks from source systems and local
+                    files.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 2 Card: Load raw data -->
-              <div id="phaseCard2" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard2"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-200 text-[11px]">2. Load raw</span>
-                  <span id="phaseStatus2" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-slate-200 text-[11px]"
+                    >2. Load raw</span
+                  >
+                  <span
+                    id="phaseStatus2"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[10px] text-slate-400">Agent 3: Staging Load</p>
                 <div class="pt-1 border-t border-slate-800">
@@ -300,17 +378,34 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-indigo-400 mb-1">Phase 2: Load raw data</div>
-                  <p class="text-[10px] text-slate-300">Ingests extracted raw data into DuckDB staging tables (stg_transactions, stg_logistics_q3) with immutable lineage tracking.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-indigo-400 mb-1">
+                    Phase 2: Load raw data
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Ingests extracted raw data into DuckDB staging tables
+                    (stg_transactions, stg_logistics_q3) with immutable lineage
+                    tracking.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 3 Card: Validate / profile -->
-              <div id="phaseCard3" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard3"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-200 text-[11px]">3. Validate</span>
-                  <span id="phaseStatus3" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-slate-200 text-[11px]"
+                    >3. Validate</span
+                  >
+                  <span
+                    id="phaseStatus3"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[10px] text-slate-400">Agent 1: AST Security</p>
                 <div class="pt-1 border-t border-slate-800">
@@ -323,17 +418,34 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-amber-400 mb-1">Phase 3: Validate / profile</div>
-                  <p class="text-[10px] text-slate-300">Executes AST SQL security validation (no mutating queries), checks schema integrity, profiles null/outlier values, and checks thresholds against dim_thresholds.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-amber-400 mb-1">
+                    Phase 3: Validate / profile
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Executes AST SQL security validation (no mutating queries),
+                    checks schema integrity, profiles null/outlier values, and
+                    checks thresholds against dim_thresholds.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 4 Card: Transform / clean -->
-              <div id="phaseCard4" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard4"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-200 text-[11px]">4. Transform</span>
-                  <span id="phaseStatus4" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-slate-200 text-[11px]"
+                    >4. Transform</span
+                  >
+                  <span
+                    id="phaseStatus4"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[10px] text-slate-400">Agent 4: Diagnostic</p>
                 <div class="pt-1 border-t border-slate-800">
@@ -346,17 +458,34 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-indigo-400 mb-1">Phase 4: Transform / clean</div>
-                  <p class="text-[10px] text-slate-300">Transforms staging data into star-schema views (fact/dim), cleans missing values, and computes Price-Volume-Mix (PVM) variance bridges.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-indigo-400 mb-1">
+                    Phase 4: Transform / clean
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Transforms staging data into star-schema views (fact/dim),
+                    cleans missing values, and computes Price-Volume-Mix (PVM)
+                    variance bridges.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 5 Card: Store curated data -->
-              <div id="phaseCard5" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard5"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-slate-200 text-[11px]">5. Store</span>
-                  <span id="phaseStatus5" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-slate-200 text-[11px]"
+                    >5. Store</span
+                  >
+                  <span
+                    id="phaseStatus5"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[10px] text-slate-400">Agent 3: Production DB</p>
                 <div class="pt-1 border-t border-slate-800">
@@ -369,19 +498,38 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-indigo-400 mb-1">Phase 5: Store curated data</div>
-                  <p class="text-[10px] text-slate-300">Stores production-ready curated views (vw_q3_variance_summary, vw_logistics_fuel_overruns) into DuckDB storage for BI reporting.</p>
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-indigo-400 mb-1">
+                    Phase 5: Store curated data
+                  </div>
+                  <p class="text-[10px] text-slate-300">
+                    Stores production-ready curated views
+                    (vw_q3_variance_summary, vw_logistics_fuel_overruns) into
+                    DuckDB storage for BI reporting.
+                  </p>
                 </div>
               </div>
 
               <!-- Phase 6 Card: EDA -->
-              <div id="phaseCard6" class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition">
+              <div
+                id="phaseCard6"
+                class="bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 flex flex-col justify-between space-y-2 relative has-tooltip transition"
+              >
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-purple-300 text-[11px]">6. EDA</span>
-                  <span id="phaseStatus6" class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono">Idle</span>
+                  <span class="font-bold text-purple-300 text-[11px]"
+                    >6. EDA</span
+                  >
+                  <span
+                    id="phaseStatus6"
+                    class="text-[9px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded font-mono"
+                    >Idle</span
+                  >
                 </div>
-                <p class="text-[10px] text-purple-400 font-medium">Agent 5: Reporting</p>
+                <p class="text-[10px] text-purple-400 font-medium">
+                  Agent 5: Reporting
+                </p>
                 <div class="pt-1 border-t border-slate-800">
                   <button
                     type="button"
@@ -392,35 +540,63 @@
                   </button>
                 </div>
                 <!-- Tooltip -->
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none">
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-56 p-2.5 bg-slate-950 border border-slate-700 rounded-lg shadow-xl text-[11px] text-slate-200 z-30 pointer-events-none"
+                >
                   <div class="font-bold text-purple-400 mb-1">Phase 6: EDA</div>
-                  <p class="text-[10px] text-slate-300">Performs comprehensive Exploratory Data Analysis across 8 sub-steps, generating executive controlling cards, variance bridges, and Power BI themes.</p>
+                  <p class="text-[10px] text-slate-300">
+                    Performs comprehensive Exploratory Data Analysis across 8
+                    sub-steps, generating executive controlling cards, variance
+                    bridges, and Power BI themes.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Phase Summary Output Banner -->
-          <div id="phaseSummaryBanner" class="bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-300 hidden space-y-1">
+          <div
+            id="phaseSummaryBanner"
+            class="bg-slate-950 border border-slate-700 rounded-lg p-3 text-xs text-slate-300 hidden space-y-1"
+          >
             <div class="flex justify-between items-center">
-              <span id="phaseSummaryTitle" class="font-bold text-indigo-400">Phase Result:</span>
-              <span id="phaseSummaryTime" class="text-[10px] text-slate-500 font-mono"></span>
+              <span id="phaseSummaryTitle" class="font-bold text-indigo-400"
+                >Phase Result:</span
+              >
+              <span
+                id="phaseSummaryTime"
+                class="text-[10px] text-slate-500 font-mono"
+              ></span>
             </div>
-            <div id="phaseSummaryText" class="text-slate-300 font-mono text-[11px]"></div>
+            <div
+              id="phaseSummaryText"
+              class="text-slate-300 font-mono text-[11px]"
+            ></div>
           </div>
 
           <!-- Sub-section: Phase 6 EDA 8-Step Breakdown -->
-          <div class="bg-slate-900/90 border border-purple-500/30 rounded-xl p-3.5 space-y-3">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2">
+          <div
+            class="bg-slate-900/90 border border-purple-500/30 rounded-xl p-3.5 space-y-3"
+          >
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2"
+            >
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="text-purple-400 text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">🔍 Phase 6 Breakdown</span>
-                  <h3 class="text-xs font-bold text-purple-300 uppercase tracking-wider">
+                  <span
+                    class="text-purple-400 text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20"
+                    >🔍 Phase 6 Breakdown</span
+                  >
+                  <h3
+                    class="text-xs font-bold text-purple-300 uppercase tracking-wider"
+                  >
                     8-Step Exploratory Data Analysis (EDA) Workflow
                   </h3>
                 </div>
                 <p class="text-[10px] text-slate-400 mt-0.5">
-                  1. Structure ↓ 2. Quality ↓ 3. Univariate ↓ 4. Target ↓ 5. Bivariate ↓ 6. Multivariate ↓ 7. Outliers ↓ 8. Feature relationships
+                  1. Structure ↓ 2. Quality ↓ 3. Univariate ↓ 4. Target ↓ 5.
+                  Bivariate ↓ 6. Multivariate ↓ 7. Outliers ↓ 8. Feature
+                  relationships
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -431,165 +607,343 @@
                 >
                   <span>⚡</span> Run All 8 EDA Steps
                 </button>
-                <span id="edaProgressBadge" class="text-purple-400 font-mono text-[10px] bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                <span
+                  id="edaProgressBadge"
+                  class="text-purple-400 font-mono text-[10px] bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20"
+                >
                   0 / 8 Steps Completed
                 </span>
               </div>
             </div>
 
             <!-- 8 EDA Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 text-xs"
+            >
               <!-- EDA Step 1 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">1. Structure</span>
-                  <span id="edaStatus1" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >1. Structure</span
+                  >
+                  <span
+                    id="edaStatus1"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Schema & Data Types</p>
-                <button type="button" onclick="executeEDAStep(1)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(1)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 1
                 </button>
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">1. Understand Data Structure</div>
-                  <p class="text-slate-300">Analyzes column data types, row counts, table keys, and primary dimension hierarchies.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    1. Understand Data Structure
+                  </div>
+                  <p class="text-slate-300">
+                    Analyzes column data types, row counts, table keys, and
+                    primary dimension hierarchies.
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 2 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">2. Quality Checks</span>
-                  <span id="edaStatus2" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >2. Quality Checks</span
+                  >
+                  <span
+                    id="edaStatus2"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Nulls & Duplicates</p>
-                <button type="button" onclick="executeEDAStep(2)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(2)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 2
                 </button>
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">2. Data Quality Checks</div>
-                  <p class="text-slate-300">Scans missing value rates, duplicate records, data type anomalies, and formatting integrity.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    2. Data Quality Checks
+                  </div>
+                  <p class="text-slate-300">
+                    Scans missing value rates, duplicate records, data type
+                    anomalies, and formatting integrity.
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 3 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">3. Univariate</span>
-                  <span id="edaStatus3" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >3. Univariate</span
+                  >
+                  <span
+                    id="edaStatus3"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Stats & Distributions</p>
-                <button type="button" onclick="executeEDAStep(3)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(3)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 3
                 </button>
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">3. Univariate Analysis</div>
-                  <p class="text-slate-300">Computes summary statistics (mean, std dev, quantiles) for single numerical features.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    3. Univariate Analysis
+                  </div>
+                  <p class="text-slate-300">
+                    Computes summary statistics (mean, std dev, quantiles) for
+                    single numerical features.
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 4 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">4. Target Analysis</span>
-                  <span id="edaStatus4" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >4. Target Analysis</span
+                  >
+                  <span
+                    id="edaStatus4"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Variance KPI Targets</p>
-                <button type="button" onclick="executeEDAStep(4)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(4)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 4
                 </button>
-                <div class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">4. Target Analysis</div>
-                  <p class="text-slate-300">Evaluates key target controlling metrics (variance_usd, net_variance_nok) against baseline caps.</p>
+                <div
+                  class="tooltip-box absolute left-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    4. Target Analysis
+                  </div>
+                  <p class="text-slate-300">
+                    Evaluates key target controlling metrics (variance_usd,
+                    net_variance_nok) against baseline caps.
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 5 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">5. Bivariate</span>
-                  <span id="edaStatus5" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >5. Bivariate</span
+                  >
+                  <span
+                    id="edaStatus5"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Feature Pair Crossings</p>
-                <button type="button" onclick="executeEDAStep(5)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(5)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 5
                 </button>
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">5. Bivariate Analysis</div>
-                  <p class="text-slate-300">Analyzes relationships between feature pairs (e.g. carrier fuel rate vs. subsidiary region).</p>
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    5. Bivariate Analysis
+                  </div>
+                  <p class="text-slate-300">
+                    Analyzes relationships between feature pairs (e.g. carrier
+                    fuel rate vs. subsidiary region).
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 6 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">6. Multivariate</span>
-                  <span id="edaStatus6" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >6. Multivariate</span
+                  >
+                  <span
+                    id="edaStatus6"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">PVM Variance Bridges</p>
-                <button type="button" onclick="executeEDAStep(6)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(6)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 6
                 </button>
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">6. Multivariate Analysis</div>
-                  <p class="text-slate-300">Decomposes multi-driver cost overruns using Price-Volume-Mix (PVM) bridges and 3 risk scenarios.</p>
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    6. Multivariate Analysis
+                  </div>
+                  <p class="text-slate-300">
+                    Decomposes multi-driver cost overruns using Price-Volume-Mix
+                    (PVM) bridges and 3 risk scenarios.
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 7 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">7. Outlier Analysis</span>
-                  <span id="edaStatus7" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >7. Outlier Analysis</span
+                  >
+                  <span
+                    id="edaStatus7"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Threshold Anomalies</p>
-                <button type="button" onclick="executeEDAStep(7)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(7)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 7
                 </button>
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">7. Outlier Analysis</div>
-                  <p class="text-slate-300">Detects extreme variance anomalies exceeding 3-sigma or contractual threshold limits (dim_thresholds).</p>
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    7. Outlier Analysis
+                  </div>
+                  <p class="text-slate-300">
+                    Detects extreme variance anomalies exceeding 3-sigma or
+                    contractual threshold limits (dim_thresholds).
+                  </p>
                 </div>
               </div>
 
               <!-- EDA Step 8 -->
-              <div class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-lg p-2 flex flex-col justify-between space-y-1.5 relative has-tooltip"
+              >
                 <div class="flex justify-between items-center">
-                  <span class="font-semibold text-slate-200 text-[10px]">8. Feature Rel.</span>
-                  <span id="edaStatus8" class="text-[9px] text-slate-500 font-mono">Idle</span>
+                  <span class="font-semibold text-slate-200 text-[10px]"
+                    >8. Feature Rel.</span
+                  >
+                  <span
+                    id="edaStatus8"
+                    class="text-[9px] text-slate-500 font-mono"
+                    >Idle</span
+                  >
                 </div>
                 <p class="text-[9px] text-slate-400">Driver Matrix & Actions</p>
-                <button type="button" onclick="executeEDAStep(8)" class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer">
+                <button
+                  type="button"
+                  onclick="executeEDAStep(8)"
+                  class="w-full bg-slate-800 hover:bg-purple-700 hover:text-white text-purple-300 text-[9px] py-0.5 rounded font-medium transition border border-slate-700 cursor-pointer"
+                >
                   ⚡ Run Step 8
                 </button>
-                <div class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none">
-                  <div class="font-bold text-purple-400 mb-0.5">8. Feature Relationships</div>
-                  <p class="text-slate-300">Maps feature correlation matrices, driver importance scores, and prescriptive FactActions.</p>
+                <div
+                  class="tooltip-box absolute right-0 bottom-full mb-2 w-52 p-2 bg-slate-900 border border-slate-700 rounded shadow-lg text-[10px] text-slate-200 z-30 pointer-events-none"
+                >
+                  <div class="font-bold text-purple-400 mb-0.5">
+                    8. Feature Relationships
+                  </div>
+                  <p class="text-slate-300">
+                    Maps feature correlation matrices, driver importance scores,
+                    and prescriptive FactActions.
+                  </p>
                 </div>
               </div>
             </div>
 
             <!-- EDA Detail Output Container -->
-            <div id="edaResultBox" class="bg-slate-950 p-2.5 rounded-lg border border-purple-500/20 text-xs hidden space-y-1">
+            <div
+              id="edaResultBox"
+              class="bg-slate-950 p-2.5 rounded-lg border border-purple-500/20 text-xs hidden space-y-1"
+            >
               <div class="flex justify-between items-center">
-                <span id="edaResultTitle" class="font-bold text-purple-300">EDA Step Output:</span>
-                <span id="edaResultTime" class="text-[10px] text-slate-500 font-mono"></span>
+                <span id="edaResultTitle" class="font-bold text-purple-300"
+                  >EDA Step Output:</span
+                >
+                <span
+                  id="edaResultTime"
+                  class="text-[10px] text-slate-500 font-mono"
+                ></span>
               </div>
-              <div id="edaResultContent" class="text-slate-300 font-mono text-[11px]"></div>
+              <div
+                id="edaResultContent"
+                class="text-slate-300 font-mono text-[11px]"
+              ></div>
             </div>
           </div>
 
           <!-- Exploratory Visual Reporting Deck (Tufte Style Charts & Power BI Theme) -->
-          <div class="bg-slate-900 border border-indigo-500/30 rounded-xl p-3.5 space-y-3">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2">
+          <div
+            class="bg-slate-900 border border-indigo-500/30 rounded-xl p-3.5 space-y-3"
+          >
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-2"
+            >
               <div>
                 <div class="flex items-center gap-2">
-                  <span class="text-indigo-400 text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">📈 Exploratory Visuals Deck</span>
-                  <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                  <span
+                    class="text-indigo-400 text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20"
+                    >📈 Exploratory Visuals Deck</span
+                  >
+                  <h3
+                    class="text-xs font-bold text-indigo-300 uppercase tracking-wider"
+                  >
                     Interactive Visual Reporting (Tufte Design Standards)
                   </h3>
                 </div>
                 <p class="text-[10px] text-slate-400 mt-0.5">
-                  Seaborn/Matplotlib SVG chart artifacts & Chart.js canvas visualizations with zero vertical gridlines.
+                  Seaborn/Matplotlib SVG chart artifacts & Chart.js canvas
+                  visualizations with zero vertical gridlines.
                 </p>
               </div>
               <div class="flex items-center gap-2">
@@ -611,28 +965,59 @@
             </div>
 
             <!-- Visual Report Tab Buttons -->
-            <div class="flex items-center gap-1.5 border-b border-slate-800 pb-2 flex-wrap text-[10px]">
-              <button onclick="switchVisualTab('univariate')" id="tabBtn_univariate" class="px-2.5 py-1 rounded font-semibold bg-indigo-600 text-white cursor-pointer">
+            <div
+              class="flex items-center gap-1.5 border-b border-slate-800 pb-2 flex-wrap text-[10px]"
+            >
+              <button
+                onclick="switchVisualTab('univariate')"
+                id="tabBtn_univariate"
+                class="px-2.5 py-1 rounded font-semibold bg-indigo-600 text-white cursor-pointer"
+              >
                 📊 Univariate KDE
               </button>
-              <button onclick="switchVisualTab('heatmap')" id="tabBtn_heatmap" class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer">
+              <button
+                onclick="switchVisualTab('heatmap')"
+                id="tabBtn_heatmap"
+                class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer"
+              >
                 🔥 Correlation Matrix
               </button>
-              <button onclick="switchVisualTab('outliers')" id="tabBtn_outliers" class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer">
+              <button
+                onclick="switchVisualTab('outliers')"
+                id="tabBtn_outliers"
+                class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer"
+              >
                 📦 Outliers Boxplot
               </button>
-              <button onclick="switchVisualTab('pvm')" id="tabBtn_pvm" class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer">
+              <button
+                onclick="switchVisualTab('pvm')"
+                id="tabBtn_pvm"
+                class="px-2.5 py-1 rounded font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700 cursor-pointer"
+              >
                 🌉 PVM Bridge Waterfall
               </button>
             </div>
 
             <!-- Visual Chart Presentation Canvas Container -->
-            <div id="visualDisplayArea" class="bg-slate-950 p-3 rounded-lg border border-slate-800 min-h-[220px] flex items-center justify-center">
-              <div id="visualPlaceholder" class="text-center text-slate-500 text-xs py-8">
-                <span>Click <strong>Generate Visual Reports</strong> to build Seaborn/Matplotlib SVG charts & Chart.js visual canvases.</span>
+            <div
+              id="visualDisplayArea"
+              class="bg-slate-950 p-3 rounded-lg border border-slate-800 min-h-[220px] flex items-center justify-center"
+            >
+              <div
+                id="visualPlaceholder"
+                class="text-center text-slate-500 text-xs py-8"
+              >
+                <span
+                  >Click <strong>Generate Visual Reports</strong> to build
+                  Seaborn/Matplotlib SVG charts & Chart.js visual
+                  canvases.</span
+                >
               </div>
               <div id="visualChartContainer" class="w-full hidden space-y-2">
-                <div id="visualImageHolder" class="flex justify-center items-center"></div>
+                <div
+                  id="visualImageHolder"
+                  class="flex justify-center items-center"
+                ></div>
               </div>
             </div>
           </div>
@@ -964,6 +1349,7 @@
             <select
               id="uploadBusinessSelect"
               onchange="onUploadBusinessChanged(event)"
+              required
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
               <!-- Populated dynamically -->
@@ -992,27 +1378,28 @@
             >
             <select
               id="uploadBusinessCategory"
+              onchange="onUploadCategoryChanged(event)"
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
-              <option value="Public Sector / Government">
-                Public Sector / Government
+              <option value="" selected>
+                Select or add a category (optional)...
               </option>
-              <option value="Commercial Supply Chain">
-                Commercial Supply Chain
-              </option>
-              <option value="Defense & Maritime Engineering">
-                Defense & Maritime Engineering
-              </option>
-              <option value="Sports & Entertainment Analytics">
-                Sports & Entertainment Analytics
-              </option>
-              <option value="Financial & Banking Audit">
-                Financial & Banking Audit
-              </option>
-              <option value="Energy & Utilities">Energy & Utilities</option>
-              <option value="General Commercial">General Commercial</option>
-              <option value="Custom Business">Custom Business</option>
             </select>
+            <div id="uploadCustomCategoryContainer" class="hidden mt-2">
+              <label for="uploadCustomCategoryInput" class="sr-only"
+                >New category</label
+              >
+              <input
+                type="text"
+                id="uploadCustomCategoryInput"
+                placeholder="Enter a new category"
+                class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+              <p class="mt-1 text-[10px] text-slate-400">
+                When the backend is connected, this category is saved with the
+                business for future use.
+              </p>
+            </div>
           </div>
 
           <!-- File Select Dropzone -->
@@ -1108,26 +1495,25 @@
             >
             <select
               id="topicCategoryInput"
+              required
+              onchange="onTopicCategoryChanged(event)"
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             >
-              <option value="Sports & Entertainment Analytics">
-                Sports & Entertainment Analytics
-              </option>
-              <option value="Defense & Maritime Engineering">
-                Defense & Maritime Engineering
-              </option>
-              <option value="Public Sector / Government">
-                Public Sector / Government
-              </option>
-              <option value="Commercial Supply Chain">
-                Commercial Supply Chain
-              </option>
-              <option value="Financial & Banking Audit">
-                Financial & Banking Audit
-              </option>
-              <option value="Energy & Utilities">Energy & Utilities</option>
-              <option value="General Commercial">General Commercial</option>
+              <option value="" selected disabled>Select a category...</option>
             </select>
+          </div>
+          <div id="topicCustomCategoryContainer" class="hidden">
+            <label
+              for="topicCustomCategoryInput"
+              class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1"
+              >New Category / Domain</label
+            >
+            <input
+              type="text"
+              id="topicCustomCategoryInput"
+              placeholder="Enter a category to save with this topic"
+              class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg p-2.5 text-xs text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+            />
           </div>
           <div>
             <label
@@ -1142,6 +1528,11 @@
             ></textarea>
           </div>
           <div class="flex justify-end gap-2 pt-2 border-t border-slate-700">
+            <p
+              id="topicSaveStatus"
+              class="mr-auto self-center text-[10px] text-amber-300 hidden"
+              role="status"
+            ></p>
             <button
               type="button"
               onclick="closeNewTopicModal()"
@@ -1196,6 +1587,16 @@
           table_count: 0,
         },
       ];
+      const DEFAULT_BUSINESS_CATEGORIES = [
+        'Public Sector / Government',
+        'Commercial Supply Chain',
+        'Defense & Maritime Engineering',
+        'Sports & Entertainment Analytics',
+        'Financial & Banking Audit',
+        'Energy & Utilities',
+        'General Commercial',
+        'Custom Business',
+      ];
 
       function getApiBaseUrl() {
         if (window.location.port === '8000') return '/api';
@@ -1212,8 +1613,8 @@
       const API_BASE = getApiBaseUrl();
       let activeTaskId = null;
       let definedBusinesses = [...DEFAULT_BUSINESSES];
-      let currentBusinessId = 'statlig_virksomhet';
-      let currentApiProvider = 'gemini';
+      let currentBusinessId = '';
+      let currentApiProvider = '';
       let currentApiKey = '';
       let isBackendOnline = false;
       let clientTrajectoryLogs = [
@@ -1247,8 +1648,7 @@
       });
 
       function initApiSettings() {
-        const savedProvider =
-          localStorage.getItem('vco_api_provider') || 'gemini';
+        const savedProvider = localStorage.getItem('vco_api_provider') || '';
         const savedKey = localStorage.getItem('vco_api_key') || '';
 
         currentApiProvider = savedProvider;
@@ -1315,7 +1715,42 @@
         }
       }
 
+      function populateCategorySelect(select, placeholder) {
+        if (!select) return;
+        const selectedValue = select.value;
+        const categories = Array.from(
+          new Set(
+            [
+              ...DEFAULT_BUSINESS_CATEGORIES,
+              ...definedBusinesses.map((business) => business.category),
+            ].filter(Boolean)
+          )
+        ).sort((a, b) => a.localeCompare(b));
+
+        select.innerHTML = '';
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = placeholder;
+        placeholderOption.disabled = true;
+        select.appendChild(placeholderOption);
+
+        categories.forEach((category) => {
+          const option = document.createElement('option');
+          option.value = category;
+          option.textContent = category;
+          select.appendChild(option);
+        });
+
+        const customOption = document.createElement('option');
+        customOption.value = '__custom__';
+        customOption.textContent = '＋ Add a category manually...';
+        select.appendChild(customOption);
+        select.value = categories.includes(selectedValue) ? selectedValue : '';
+      }
+
       function mergeAndSetBusinesses(bizList) {
+        const uploadSelect = document.getElementById('uploadBusinessSelect');
+        const previousUploadSelection = uploadSelect ? uploadSelect.value : '';
         const map = new Map();
         [
           ...DEFAULT_BUSINESSES,
@@ -1338,12 +1773,23 @@
         const mainSelects = document.querySelectorAll(
           '#businessSelect, #businessContextSelect'
         );
-        const uploadSelect = document.getElementById('uploadBusinessSelect');
 
         mainSelects.forEach((select) => {
           select.innerHTML = '';
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Select a business topic...';
+          placeholder.disabled = true;
+          select.appendChild(placeholder);
         });
-        if (uploadSelect) uploadSelect.innerHTML = '';
+        if (uploadSelect) {
+          uploadSelect.innerHTML = '';
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Select a business topic...';
+          placeholder.disabled = true;
+          uploadSelect.appendChild(placeholder);
+        }
 
         definedBusinesses.forEach((b) => {
           mainSelects.forEach((mainSelect) => {
@@ -1366,23 +1812,37 @@
         if (uploadSelect) {
           const optNew = document.createElement('option');
           optNew.value = 'NEW_BUSINESS';
-          optNew.innerText = '➕ Register New Business Topic...';
+          optNew.innerText = '＋ Add a business topic manually...';
           uploadSelect.appendChild(optNew);
         }
 
-        // Ensure a valid business is selected
         if (
-          definedBusinesses.length > 0 &&
-          !definedBusinesses.some((b) => b.id === currentBusinessId)
+          !definedBusinesses.some(
+            (business) => business.id === currentBusinessId
+          )
         ) {
-          currentBusinessId = definedBusinesses[0].id;
+          currentBusinessId = '';
         }
 
         mainSelects.forEach((select) => {
           select.value = currentBusinessId;
         });
-        if (uploadSelect && uploadSelect.value !== 'NEW_BUSINESS')
-          uploadSelect.value = currentBusinessId;
+        if (uploadSelect) {
+          const hasPreviousSelection = Array.from(uploadSelect.options).some(
+            (option) => option.value === previousUploadSelection
+          );
+          uploadSelect.value = hasPreviousSelection
+            ? previousUploadSelection
+            : '';
+        }
+        populateCategorySelect(
+          document.getElementById('uploadBusinessCategory'),
+          'Select or add a category (optional)...'
+        );
+        populateCategorySelect(
+          document.getElementById('topicCategoryInput'),
+          'Select a category...'
+        );
 
         updateActiveBusinessUI();
       }
@@ -1394,15 +1854,56 @@
 
       function updateActiveBusinessUI() {
         const biz = definedBusinesses.find((b) => b.id === currentBusinessId);
+        const activeDescElem = document.getElementById('activeBizDesc');
+        const activeBadgeElem = document.getElementById('activeBizTableBadge');
+        const reportStatus = document.getElementById('reportStatus');
+        const selectionMessage = document.getElementById(
+          'businessSelectionMessage'
+        );
+
+        document
+          .querySelectorAll('#businessSelect, #businessContextSelect')
+          .forEach((select) => {
+            select.value = currentBusinessId;
+          });
+
+        if (!biz) {
+          if (activeDescElem)
+            activeDescElem.innerText =
+              'Select a business topic or add one to continue.';
+          if (activeBadgeElem) activeBadgeElem.innerText = 'No topic selected';
+          if (reportStatus) reportStatus.innerText = 'Select a business topic';
+          if (selectionMessage) selectionMessage.classList.add('hidden');
+          document.getElementById('netVarianceLabel').innerText =
+            'Dataset Metrics';
+          document.getElementById('netVarianceVal').innerText = '—';
+          document.getElementById('netVarianceDetail').innerText =
+            'Select a business topic to view its data';
+          document.getElementById('primaryDriverLabel').innerText =
+            'Analysis Status';
+          document.getElementById('primaryDriverVal').innerText =
+            'Not analyzed';
+          document.getElementById('primaryDriverDetail').innerText = '';
+          document.getElementById('forecastImpactLabel').innerText =
+            'Data Source';
+          document.getElementById('forecastImpactVal').innerText = '—';
+          document.getElementById('forecastImpactDetail').innerText = '';
+          document.getElementById('prescriptiveTitle').innerText =
+            'Dataset Analysis';
+          document.getElementById('prescriptiveList').innerHTML =
+            '<li>Select a topic or use <strong>Add Topic</strong> to create one.</li>';
+          const knowledgeList = document.getElementById('knowledgeSummaryList');
+          if (knowledgeList)
+            knowledgeList.innerHTML =
+              '<div class="text-xs text-slate-500 italic p-2">Select a topic to view stored files.</div>';
+          return;
+        }
+
         if (biz) {
-          const activeDescElem = document.getElementById('activeBizDesc');
           if (activeDescElem) {
             activeDescElem.innerText =
               biz.description || `${biz.category} Context`;
           }
-          const activeBadgeElem = document.getElementById(
-            'activeBizTableBadge'
-          );
           if (activeBadgeElem) {
             const localKnowledge = getLocalKnowledgeStore();
             const count =
@@ -1410,18 +1911,25 @@
             activeBadgeElem.innerText = `${count} Ingested Tables`;
           }
 
-          document
-            .querySelectorAll('#businessSelect, #businessContextSelect')
-            .forEach((select) => {
-              if (select.value !== currentBusinessId)
-                select.value = currentBusinessId;
-            });
-          const reportStatus = document.getElementById('reportStatus');
           if (reportStatus)
             reportStatus.innerText = `Active Dataset: ${biz.name}`;
+          if (selectionMessage) selectionMessage.classList.add('hidden');
           renderClientDashboard(currentBusinessId);
           loadBusinessKnowledgeSummary(currentBusinessId);
         }
+      }
+
+      function requireBusinessSelection() {
+        if (currentBusinessId) return true;
+        const selectionMessage = document.getElementById(
+          'businessSelectionMessage'
+        );
+        if (selectionMessage) {
+          selectionMessage.innerText =
+            'Select a business topic, or add one with “Add Topic”, before continuing.';
+          selectionMessage.classList.remove('hidden');
+        }
+        return false;
       }
 
       function openUploadModal() {
@@ -1435,11 +1943,13 @@
         }
         const uploadSelect = document.getElementById('uploadBusinessSelect');
         if (uploadSelect) {
-          if (!uploadSelect.value || uploadSelect.value === 'NEW_BUSINESS') {
-            uploadSelect.value = currentBusinessId;
-          }
           onUploadBusinessChanged({ target: uploadSelect });
         }
+        const categorySelect = document.getElementById(
+          'uploadBusinessCategory'
+        );
+        if (categorySelect) categorySelect.value = '';
+        onUploadCategoryChanged({ target: categorySelect });
       }
 
       function closeUploadModal() {
@@ -1448,28 +1958,6 @@
 
       function onUploadBusinessChanged(e) {
         const container = document.getElementById('newBusinessInputContainer');
-        const selectedBusiness = definedBusinesses.find(
-          (b) => b.id === e.target.value
-        );
-        const categorySelect = document.getElementById(
-          'uploadBusinessCategory'
-        );
-
-        if (selectedBusiness && categorySelect) {
-          const hasCategory = Array.from(categorySelect.options).some(
-            (option) => option.value === selectedBusiness.category
-          );
-          if (!hasCategory) {
-            const customOption = document.createElement('option');
-            customOption.value = selectedBusiness.category;
-            customOption.textContent = selectedBusiness.category;
-            categorySelect.appendChild(customOption);
-          }
-          categorySelect.value = selectedBusiness.category || 'Custom Business';
-        } else if (categorySelect) {
-          categorySelect.value = 'General Commercial';
-        }
-
         if (e.target.value === 'NEW_BUSINESS') {
           container.classList.remove('hidden');
           document
@@ -1480,6 +1968,32 @@
           document
             .getElementById('newBusinessName')
             .removeAttribute('required');
+        }
+      }
+
+      function onUploadCategoryChanged(e) {
+        const isCustom = e.target && e.target.value === '__custom__';
+        const container = document.getElementById(
+          'uploadCustomCategoryContainer'
+        );
+        const input = document.getElementById('uploadCustomCategoryInput');
+        if (container) container.classList.toggle('hidden', !isCustom);
+        if (input) {
+          if (isCustom) input.setAttribute('required', 'true');
+          else input.removeAttribute('required');
+        }
+      }
+
+      function onTopicCategoryChanged(e) {
+        const isCustom = e.target.value === '__custom__';
+        const container = document.getElementById(
+          'topicCustomCategoryContainer'
+        );
+        const input = document.getElementById('topicCustomCategoryInput');
+        if (container) container.classList.toggle('hidden', !isCustom);
+        if (input) {
+          if (isCustom) input.setAttribute('required', 'true');
+          else input.removeAttribute('required');
         }
       }
 
@@ -1559,7 +2073,7 @@
       }
 
       function renderClientDashboard(businessId) {
-        if (isBackendOnline) return;
+        if (isBackendOnline && businessId !== 'premier_league') return;
         const list = document.getElementById('prescriptiveList');
         const title = document.getElementById('prescriptiveTitle');
         if (businessId !== 'premier_league') {
@@ -1803,23 +2317,43 @@
         const fileInput = document.getElementById('fileInput');
         const uploadSelect = document.getElementById('uploadBusinessSelect');
         const newBizName = document.getElementById('newBusinessName').value;
-        const categoryVal = document.getElementById(
+        const categorySelect = document.getElementById(
           'uploadBusinessCategory'
-        ).value;
+        );
+        const categoryChoice = categorySelect.value;
+        const categoryVal =
+          categoryChoice === '__custom__'
+            ? document.getElementById('uploadCustomCategoryInput').value.trim()
+            : categoryChoice;
 
         if (!fileInput.files || fileInput.files.length === 0) return;
 
         const file = fileInput.files[0];
-        let targetBizId = uploadSelect ? uploadSelect.value : currentBusinessId;
+        const selectedBusiness = uploadSelect ? uploadSelect.value : '';
+        const createsBusiness = selectedBusiness === 'NEW_BUSINESS';
 
-        if (targetBizId === 'NEW_BUSINESS' && newBizName) {
-          const newBiz = registerCustomBusinessClientSide(
-            newBizName,
+        if (!selectedBusiness) {
+          document
+            .getElementById('uploadStatusCard')
+            .classList.remove('hidden');
+          document.getElementById('uploadStatusText').innerText =
+            'Choose a business topic or select “Add a business topic manually...”.';
+          return;
+        }
+        if (categoryChoice === '__custom__' && !categoryVal) {
+          document.getElementById('uploadCustomCategoryInput').reportValidity();
+          return;
+        }
+        if (createsBusiness && !newBizName.trim()) {
+          document.getElementById('newBusinessName').reportValidity();
+          return;
+        }
+        let targetBizId = selectedBusiness;
+        if (createsBusiness && !isBackendOnline) {
+          targetBizId = registerCustomBusinessClientSide(
+            newBizName.trim(),
             categoryVal
-          );
-          targetBizId = newBiz.id;
-        } else if (!targetBizId) {
-          targetBizId = currentBusinessId || 'statlig_virksomhet';
+          ).id;
         }
 
         const statusCard = document.getElementById('uploadStatusCard');
@@ -1833,9 +2367,9 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('business_id', targetBizId);
-            formData.append('business_category', categoryVal);
-            if (uploadSelect.value === 'NEW_BUSINESS' && newBizName) {
-              formData.append('new_business_name', newBizName);
+            if (categoryVal) formData.append('business_category', categoryVal);
+            if (createsBusiness && newBizName.trim()) {
+              formData.append('new_business_name', newBizName.trim());
             }
 
             const res = await fetch(`${API_BASE}/upload`, {
@@ -1846,20 +2380,36 @@
             if (res.ok) {
               const data = await res.json();
               statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete:</span> ${data.summary}`;
-              if (data.business_id) currentBusinessId = data.business_id;
+              const businessId = data.business_id || targetBizId;
+              currentBusinessId = businessId;
+              try {
+                const localRecord = await parseFileClientSide(
+                  file,
+                  businessId,
+                  categoryVal
+                );
+                saveLocalKnowledgeRecord(businessId, localRecord);
+              } catch (parseError) {
+                console.warn(
+                  'Backend upload succeeded; browser metrics were not cached:',
+                  parseError
+                );
+              }
+              await fetchBusinesses();
+              updateActiveBusinessUI();
 
               setTimeout(() => {
                 closeUploadModal();
-                fetchBusinesses();
                 fetchTrajectory();
               }, 1500);
               return;
             }
-          } catch (backendErr) {
-            console.warn(
-              'Backend upload failed, falling back to browser parsing:',
-              backendErr
+            throw new Error(
+              (await res.json()).detail || `Upload failed (${res.status})`
             );
+          } catch (backendErr) {
+            statusText.innerHTML = `<span class="text-rose-400 font-bold">✕ Backend upload failed:</span> ${backendErr.message}`;
+            return;
           }
         }
 
@@ -1867,11 +2417,15 @@
         try {
           const res = await parseFileClientSide(file, targetBizId, categoryVal);
           saveLocalKnowledgeRecord(targetBizId, res);
+          if (categoryVal && !createsBusiness) {
+            saveLocalBusinessCategory(targetBizId, categoryVal);
+          }
 
           const bizObj = definedBusinesses.find((b) => b.id === targetBizId);
           if (bizObj) bizObj.table_count = (bizObj.table_count || 0) + 1;
 
           currentBusinessId = targetBizId;
+          await fetchBusinesses();
           updateActiveBusinessUI();
 
           const logMsg = `Ingested file '${file.name}' into business topic. Summary: ${res.summary}`;
@@ -1882,7 +2436,7 @@
             'SUCCESS'
           );
 
-          statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete (Client Mode):</span> ${res.summary}`;
+          statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete (Browser Only):</span> ${res.summary} Custom topics/categories are stored only in this browser until the backend is connected.`;
 
           setTimeout(() => {
             closeUploadModal();
@@ -1915,6 +2469,24 @@
         return newBiz;
       }
 
+      function saveLocalBusinessCategory(businessId, category) {
+        const businesses = getStoredCustomBusinesses();
+        const existing = definedBusinesses.find(
+          (business) => business.id === businessId
+        );
+        if (!existing) return;
+        const updated = { ...existing, category };
+        const index = businesses.findIndex(
+          (business) => business.id === businessId
+        );
+        if (index >= 0) businesses[index] = updated;
+        else businesses.push(updated);
+        localStorage.setItem(
+          'vco_custom_businesses',
+          JSON.stringify(businesses)
+        );
+      }
+
       function openNewTopicModal() {
         document.getElementById('newTopicModal').classList.remove('hidden');
       }
@@ -1925,9 +2497,23 @@
 
       async function handleCreateTopicSubmit(e) {
         e.preventDefault();
-        const name = document.getElementById('topicNameInput').value;
-        const category = document.getElementById('topicCategoryInput').value;
+        const name = document.getElementById('topicNameInput').value.trim();
+        const categoryChoice =
+          document.getElementById('topicCategoryInput').value;
+        const category =
+          categoryChoice === '__custom__'
+            ? document.getElementById('topicCustomCategoryInput').value.trim()
+            : categoryChoice;
         const description = document.getElementById('topicDescInput').value;
+        const status = document.getElementById('topicSaveStatus');
+        if (!name || !category) {
+          if (categoryChoice === '__custom__')
+            document
+              .getElementById('topicCustomCategoryInput')
+              .reportValidity();
+          return;
+        }
+        if (status) status.classList.add('hidden');
 
         if (isBackendOnline) {
           try {
@@ -1946,21 +2532,52 @@
               currentBusinessId = newBiz.id;
               await fetchBusinesses();
               document.getElementById('newTopicForm').reset();
+              onTopicCategoryChanged({
+                target: document.getElementById('topicCategoryInput'),
+              });
+              addTrajectoryLog(
+                'Agent 1: Supervisor',
+                'Topic Registration',
+                `Saved topic '${newBiz.name}' and category '${newBiz.category}' to the backend business registry.`,
+                'SUCCESS'
+              );
               return;
             }
-          } catch (err) {
-            console.warn(
-              'Backend topic creation failed, saving client side:',
-              err
+            throw new Error(
+              (await res.json()).detail || `Topic save failed (${res.status})`
             );
+          } catch (err) {
+            console.warn('Backend topic creation failed:', err);
+            if (status) {
+              status.innerText = `Backend save failed (${err.message}); this topic will only be saved in this browser.`;
+              status.classList.remove('hidden');
+            }
           }
         }
 
         const newBiz = registerCustomBusinessClientSide(name, category);
         closeNewTopicModal();
         currentBusinessId = newBiz.id;
-        fetchBusinesses();
+        await fetchBusinesses();
+        updateActiveBusinessUI();
+        const selectionMessage = document.getElementById(
+          'businessSelectionMessage'
+        );
+        if (selectionMessage) {
+          selectionMessage.innerText =
+            'Topic saved in this browser only. Connect the FastAPI backend to store it for everyone.';
+          selectionMessage.classList.remove('hidden');
+        }
+        addTrajectoryLog(
+          'Agent 1: Supervisor',
+          'Topic Registration',
+          `Saved topic '${name}' locally; backend unavailable, so it is not shared.`,
+          'INFO'
+        );
         document.getElementById('newTopicForm').reset();
+        onTopicCategoryChanged({
+          target: document.getElementById('topicCategoryInput'),
+        });
       }
 
       function addTrajectoryLog(agent, action, message, status = 'INFO') {
@@ -2023,6 +2640,7 @@
 
       async function handleAuditSubmit(e) {
         e.preventDefault();
+        if (!requireBusinessSelection()) return;
         const prompt = document.getElementById('requestInput').value;
         if (!prompt) return;
 
@@ -2228,7 +2846,7 @@
         const keyInput = document.getElementById('apiKeyInput');
         const providerSelect = document.getElementById('apiProviderSelect');
 
-        currentApiProvider = providerSelect ? providerSelect.value : 'gemini';
+        currentApiProvider = providerSelect ? providerSelect.value : '';
         currentApiKey = keyInput ? keyInput.value : '';
 
         localStorage.setItem('vco_api_provider', currentApiProvider);
@@ -2257,6 +2875,13 @@
                 btn.innerHTML = origText;
                 btn.classList.remove('bg-emerald-600');
                 btn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+              }, 1500);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to sync API settings to backend:', err);
+        }
+      }
       // -----------------------------------------------------------------------------
       // Pipeline & EDA Execution Logic
       // -----------------------------------------------------------------------------
@@ -2273,6 +2898,7 @@
       let completedEDASteps = new Set();
 
       async function executePipelinePhase(phaseNum) {
+        if (!requireBusinessSelection()) return;
         const statusElem = document.getElementById(`phaseStatus${phaseNum}`);
         const cardElem = document.getElementById(`phaseCard${phaseNum}`);
         if (statusElem) {
@@ -2364,6 +2990,7 @@
       }
 
       async function runAllPipelinePhases() {
+        if (!requireBusinessSelection()) return;
         for (let p = 1; p <= 6; p++) {
           await executePipelinePhase(p);
           await new Promise((r) => setTimeout(r, 400));
@@ -2435,6 +3062,7 @@
       };
 
       async function executeEDAStep(stepNum) {
+        if (!requireBusinessSelection()) return;
         const statusElem = document.getElementById(`edaStatus${stepNum}`);
         if (statusElem) {
           statusElem.innerText = 'Running Python...';
@@ -2489,8 +3117,7 @@
           if (edaReportHtml) {
             resultContent.innerHTML = edaReportHtml;
           } else {
-            summaryText =
-              EDA_STEP_SUMMARIES[stepNum] || 'EDA Step completed.';
+            summaryText = EDA_STEP_SUMMARIES[stepNum] || 'EDA Step completed.';
             resultContent.innerText = summaryText;
           }
           resultBox.classList.remove('hidden');
@@ -2642,6 +3269,7 @@
       }
 
       async function runAllEDASteps() {
+        if (!requireBusinessSelection()) return;
         for (let s = 1; s <= 8; s++) {
           await executeEDAStep(s);
           await new Promise((r) => setTimeout(r, 200));
@@ -2655,6 +3283,7 @@
       let activeTab = 'univariate';
 
       async function generateAllVisualReports() {
+        if (!requireBusinessSelection()) return;
         const placeholder = document.getElementById('visualPlaceholder');
         const container = document.getElementById('visualChartContainer');
 
@@ -2708,7 +3337,11 @@
         const holder = document.getElementById('visualImageHolder');
         if (!holder) return;
 
-        if (activeVisuals && activeVisuals[tabName] && activeVisuals[tabName].svg_image) {
+        if (
+          activeVisuals &&
+          activeVisuals[tabName] &&
+          activeVisuals[tabName].svg_image
+        ) {
           holder.innerHTML = `<img src="${activeVisuals[tabName].svg_image}" class="max-w-full rounded border border-slate-800 shadow" alt="EDA Chart Artifact" />`;
         } else {
           holder.innerHTML = renderFallbackSVGChart(tabName);
@@ -2795,21 +3428,28 @@
 
       async function exportPowerBIThemeJSON() {
         let themeObj = {
-          name: "Virtual Controller Office - Tufte Dark",
-          dataColors: ["#6366f1", "#10b981", "#f59e0b", "#f43f5e", "#8b5cf6", "#06b6d4"],
-          background: "#0f172a",
-          foreground: "#e2e8f0",
-          tableAccent: "#1e293b",
+          name: 'Virtual Controller Office - Tufte Dark',
+          dataColors: [
+            '#6366f1',
+            '#10b981',
+            '#f59e0b',
+            '#f43f5e',
+            '#8b5cf6',
+            '#06b6d4',
+          ],
+          background: '#0f172a',
+          foreground: '#e2e8f0',
+          tableAccent: '#1e293b',
           visualStyles: {
-            "*": {
-              "*": {
-                fontFamily: [{ fontFamily: "Inter" }],
+            '*': {
+              '*': {
+                fontFamily: [{ fontFamily: 'Inter' }],
                 fontSize: 9,
                 border: [{ show: false }],
-                dropShadow: [{ show: false }]
-              }
-            }
-          }
+                dropShadow: [{ show: false }],
+              },
+            },
+          },
         };
 
         if (isBackendOnline) {
