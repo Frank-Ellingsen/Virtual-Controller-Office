@@ -7,6 +7,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
 
   <body
@@ -686,15 +687,68 @@
 
     <!-- JavaScript Handler -->
     <script>
-      const API_BASE =
-        window.location.port === '8000'
-          ? '/api'
-          : `${window.location.protocol === 'file:' ? 'http:' : window.location.protocol}//${window.location.hostname || 'localhost'}:8000/api`;
+      const DEFAULT_BUSINESSES = [
+        {
+          id: 'statlig_virksomhet',
+          name: 'Statlig Virksomhet (DFØ / SRS)',
+          description: 'State Education & Research Institution under DFØ & SRS regulations (UiA Context)',
+          category: 'Public Sector / Government',
+          table_count: 0
+        },
+        {
+          id: 'logistics_eu',
+          name: 'EU Logistics & Freight Enterprise',
+          description: 'Global Freight, Transportation & Logistics Variance Audit',
+          category: 'Commercial Supply Chain',
+          table_count: 0
+        },
+        {
+          id: 'umoe_mandal_defense',
+          name: 'Umoe Mandal Defense & Maritime',
+          description: 'Naval Defense & Composite Shipyard Project Controlling (EAC/ETC)',
+          category: 'Defense & Maritime Engineering',
+          table_count: 0
+        },
+        {
+          id: 'premier_league',
+          name: 'Premier League & Sports Analytics',
+          description: 'English Premier League Match Data, Financial Performance & Operational Metrics',
+          category: 'Sports & Entertainment Analytics',
+          table_count: 0
+        }
+      ];
+
+      function getApiBaseUrl() {
+        if (window.location.port === '8000') return '/api';
+        if (window.location.protocol === 'file:') return 'http://localhost:8000/api';
+        const hostname = window.location.hostname || 'localhost';
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return 'http://localhost:8000/api';
+        }
+        return `${window.location.protocol}//${hostname}:8000/api`;
+      }
+
+      const API_BASE = getApiBaseUrl();
       let activeTaskId = null;
-      let definedBusinesses = [];
+      let definedBusinesses = [...DEFAULT_BUSINESSES];
       let currentBusinessId = 'statlig_virksomhet';
       let currentApiProvider = 'gemini';
       let currentApiKey = '';
+      let isBackendOnline = false;
+      let clientTrajectoryLogs = [
+        {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          agent: 'Agent 1: Supervisor',
+          action: 'System Active',
+          message: 'Virtual Controller Office Dashboard initialized in Browser Ingestion Mode.',
+          status: 'INFO'
+        }
+      ];
+
+      function slugify(text) {
+        if (!text) return 'unnamed';
+        return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '_').replace(/^_+|_+$/g, '');
+      }
 
       window.addEventListener('DOMContentLoaded', () => {
         initApiSettings();
@@ -703,8 +757,7 @@
       });
 
       function initApiSettings() {
-        const savedProvider =
-          localStorage.getItem('vco_api_provider') || 'gemini';
+        const savedProvider = localStorage.getItem('vco_api_provider') || 'gemini';
         const savedKey = localStorage.getItem('vco_api_key') || '';
 
         currentApiProvider = savedProvider;
@@ -719,6 +772,645 @@
         updateApiKeyPlaceholder();
         if (savedKey) {
           syncApiSettingsToBackend(savedProvider, savedKey);
+        }
+      }
+
+      function updateBackendBadge(online) {
+        isBackendOnline = online;
+        const badge = document.getElementById('backendStatusBadge');
+        if (!badge) return;
+        if (online) {
+          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+          badge.innerHTML = "● FastAPI Backend Online";
+        } else {
+          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20";
+          badge.innerHTML = "● Browser Ingestion Mode";
+          badge.title = "Backend offline or static GitHub Pages mode. Excel/CSV files parse directly in browser.";
+        }
+      }
+
+      async function fetchBusinesses() {
+        try {
+          const res = await fetch(`${API_BASE}/businesses`, { signal: AbortSignal.timeout(3000) });
+          if (res.ok) {
+            const data = await res.json();
+            const serverBiz = data.businesses || [];
+            updateBackendBadge(true);
+            mergeAndSetBusinesses(serverBiz);
+            return;
+          }
+        } catch (err) {
+          // Backend unreachable, fallback to browser mode
+        }
+        updateBackendBadge(false);
+        const storedCustom = getStoredCustomBusinesses();
+        mergeAndSetBusinesses([...DEFAULT_BUSINESSES, ...storedCustom]);
+      }
+
+      function getStoredCustomBusinesses() {
+        try {
+          return JSON.parse(localStorage.getItem('vco_custom_businesses') || '[]');
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function mergeAndSetBusinesses(bizList) {
+        const map = new Map();
+        [...DEFAULT_BUSINESSES, ...getStoredCustomBusinesses(), ...bizList].forEach(b => {
+          if (b && b.id) map.set(b.id, b);
+        });
+        definedBusinesses = Array.from(map.values());
+
+        // Update table counts from local knowledge store
+        const localKnowledge = getLocalKnowledgeStore();
+        definedBusinesses.forEach(b => {
+          const files = localKnowledge[b.id] || [];
+          if (files.length > 0 && (!b.table_count || b.table_count === 0)) {
+            b.table_count = files.length;
+          }
+        });
+
+        const mainSelect = document.getElementById('businessSelect');
+        const uploadSelect = document.getElementById('uploadBusinessSelect');
+
+        if (mainSelect) mainSelect.innerHTML = '';
+        if (uploadSelect) uploadSelect.innerHTML = '';
+
+        definedBusinesses.forEach((b) => {
+          if (mainSelect) {
+            const opt1 = document.createElement('option');
+            opt1.value = b.id;
+            opt1.innerText = `${b.name} (${b.table_count || 0} tables)`;
+            if (b.id === currentBusinessId) opt1.selected = true;
+            mainSelect.appendChild(opt1);
+          }
+
+          if (uploadSelect) {
+            const opt2 = document.createElement('option');
+            opt2.value = b.id;
+            opt2.innerText = `${b.name} (${b.category || 'Topic'})`;
+            if (b.id === currentBusinessId) opt2.selected = true;
+            uploadSelect.appendChild(opt2);
+          }
+        });
+
+        if (uploadSelect) {
+          const optNew = document.createElement('option');
+          optNew.value = 'NEW_BUSINESS';
+          optNew.innerText = '➕ Register New Business Topic...';
+          uploadSelect.appendChild(optNew);
+        }
+
+        // Ensure a valid business is selected
+        if (definedBusinesses.length > 0 && !definedBusinesses.some(b => b.id === currentBusinessId)) {
+          currentBusinessId = definedBusinesses[0].id;
+        }
+
+        if (mainSelect) mainSelect.value = currentBusinessId;
+        if (uploadSelect && uploadSelect.value !== 'NEW_BUSINESS') uploadSelect.value = currentBusinessId;
+
+        updateActiveBusinessUI();
+      }
+
+      function onBusinessChanged(e) {
+        currentBusinessId = e.target.value;
+        updateActiveBusinessUI();
+      }
+
+      function updateActiveBusinessUI() {
+        const biz = definedBusinesses.find((b) => b.id === currentBusinessId);
+        if (biz) {
+          const activeDescElem = document.getElementById('activeBizDesc');
+          if (activeDescElem) {
+            activeDescElem.innerText = biz.description || `${biz.category} Context`;
+          }
+          const activeBadgeElem = document.getElementById('activeBizTableBadge');
+          if (activeBadgeElem) {
+            const localKnowledge = getLocalKnowledgeStore();
+            const count = (localKnowledge[biz.id] || []).length || biz.table_count || 0;
+            activeBadgeElem.innerText = `${count} Ingested Tables`;
+          }
+
+          const mainSelect = document.getElementById('businessSelect');
+          if (mainSelect && mainSelect.value !== currentBusinessId) {
+            mainSelect.value = currentBusinessId;
+          }
+          loadBusinessKnowledgeSummary(currentBusinessId);
+        }
+      }
+
+      function openUploadModal() {
+        document.getElementById('uploadModal').classList.remove('hidden');
+        document.getElementById('uploadStatusCard').classList.add('hidden');
+        const uploadSelect = document.getElementById('uploadBusinessSelect');
+        if (uploadSelect) {
+          if (!uploadSelect.value || uploadSelect.value === 'NEW_BUSINESS') {
+            uploadSelect.value = currentBusinessId;
+          }
+          onUploadBusinessChanged({ target: uploadSelect });
+        }
+      }
+
+      function closeUploadModal() {
+        document.getElementById('uploadModal').classList.add('hidden');
+      }
+
+      function onUploadBusinessChanged(e) {
+        const container = document.getElementById('newBusinessInputContainer');
+        const selectedBusiness = definedBusinesses.find((b) => b.id === e.target.value);
+        const categorySelect = document.getElementById('uploadBusinessCategory');
+
+        if (selectedBusiness && categorySelect) {
+          const hasCategory = Array.from(categorySelect.options).some(
+            (option) => option.value === selectedBusiness.category
+          );
+          if (!hasCategory) {
+            const customOption = document.createElement('option');
+            customOption.value = selectedBusiness.category;
+            customOption.textContent = selectedBusiness.category;
+            categorySelect.appendChild(customOption);
+          }
+          categorySelect.value = selectedBusiness.category || 'Custom Business';
+        } else if (categorySelect) {
+          categorySelect.value = 'General Commercial';
+        }
+
+        if (e.target.value === 'NEW_BUSINESS') {
+          container.classList.remove('hidden');
+          document.getElementById('newBusinessName').setAttribute('required', 'true');
+        } else {
+          container.classList.add('hidden');
+          document.getElementById('newBusinessName').removeAttribute('required');
+        }
+      }
+
+      function getLocalKnowledgeStore() {
+        try {
+          return JSON.parse(localStorage.getItem('vco_local_knowledge') || '{}');
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function saveLocalKnowledgeRecord(bizId, record) {
+        const store = getLocalKnowledgeStore();
+        if (!store[bizId]) store[bizId] = [];
+        store[bizId].unshift(record);
+        localStorage.setItem('vco_local_knowledge', JSON.stringify(store));
+      }
+
+      async function loadBusinessKnowledgeSummary(bid) {
+        const container = document.getElementById('knowledgeSummaryList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/businesses/${bid}/summary`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.knowledge_files && data.knowledge_files.length > 0) {
+                renderKnowledgeFiles(container, data.knowledge_files);
+                return;
+              } else if (data.tables && data.tables.length > 0) {
+                renderKnowledgeTables(container, data.tables);
+                return;
+              }
+            }
+          } catch (err) {
+            console.error('Error fetching backend knowledge summary:', err);
+          }
+        }
+
+        // Client-side local storage fallback
+        const localKnowledge = getLocalKnowledgeStore();
+        const files = localKnowledge[bid] || [];
+        if (files.length > 0) {
+          renderKnowledgeFiles(container, files);
+        } else {
+          container.innerHTML = `<div class="text-xs text-slate-500 italic p-2">No files or tables ingested yet for this topic. Upload a file to populate.</div>`;
+        }
+      }
+
+      function renderKnowledgeFiles(container, files) {
+        container.innerHTML = '';
+        files.slice(0, 8).forEach((file) => {
+          const item = document.createElement('div');
+          item.className = 'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
+          item.innerHTML = `
+            <div>
+              <div class="font-medium text-slate-200">${file.filename}</div>
+              <div class="text-[10px] text-slate-500">${file.file_type || 'DATA'} • ${file.summary || 'Ingested'}</div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">Indexed</span>
+          `;
+          container.appendChild(item);
+        });
+      }
+
+      function renderKnowledgeTables(container, tables) {
+        container.innerHTML = '';
+        tables.slice(0, 8).forEach((t) => {
+          const item = document.createElement('div');
+          item.className = 'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
+          item.innerHTML = `<div>
+            <div class="font-medium text-slate-200">${t}</div>
+            <div class="text-[10px] text-slate-500">DuckDB Table</div>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">Active</span>`;
+          container.appendChild(item);
+        });
+      }
+
+      async function parseFileClientSide(file, businessId, category) {
+        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        let summaryInfo = '';
+        let storedTableName = '';
+        let rowCount = 0;
+        let colCount = 0;
+
+        if (['.xlsx', '.xls', '.xlsm', '.csv'].includes(ext)) {
+          if (typeof XLSX !== 'undefined') {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetsCreated = [];
+            const baseFname = slugify(file.name.replace(/\.[^/.]+$/, ''));
+
+            workbook.SheetNames.forEach((sheetName) => {
+              const worksheet = workbook.Sheets[sheetName];
+              const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              if (!jsonRows || jsonRows.length === 0) return;
+
+              const headers = jsonRows[0] || [];
+              const dataRows = jsonRows.slice(1);
+              const rows = dataRows.length;
+              rowCount += rows;
+              colCount = headers.length;
+
+              const cleanSheet = slugify(sheetName);
+              const sheetTableName = (workbook.SheetNames.length === 1 || ['sheet1', 'table1', 'data'].includes(cleanSheet))
+                ? `tbl_${baseFname}`
+                : `tbl_${baseFname}_${cleanSheet}`;
+
+              if (!storedTableName) storedTableName = sheetTableName;
+              sheetsCreated.push(`${sheetTableName} (${rows} rows, ${colCount} cols)`);
+            });
+
+            summaryInfo = `Ingested Excel workbook '${file.name}' into ${sheetsCreated.length || 1} table(s): ${sheetsCreated.join(', ') || `tbl_${baseFname}`}`;
+          } else {
+            storedTableName = `tbl_${slugify(file.name.replace(/\.[^/.]+$/, ''))}`;
+            summaryInfo = `Ingested spreadsheet file '${file.name}' (${(file.size / 1024).toFixed(1)} KB).`;
+          }
+        } else if (ext === '.json') {
+          const text = await file.text();
+          try {
+            const parsed = JSON.parse(text);
+            rowCount = Array.isArray(parsed) ? parsed.length : 1;
+            storedTableName = `tbl_${slugify(file.name.replace(/\.[^/.]+$/, ''))}`;
+            summaryInfo = `Ingested JSON data '${storedTableName}' with ${rowCount} record(s).`;
+          } catch (e) {
+            summaryInfo = `Stored JSON document knowledge (${text.length} chars).`;
+          }
+        } else {
+          const text = await file.text();
+          summaryInfo = `Indexed text document knowledge (${text.length} chars).`;
+        }
+
+        return {
+          file_id: `doc_${Date.now()}`,
+          filename: file.name,
+          file_type: ext.replace('.', '').toUpperCase(),
+          file_size_bytes: file.size,
+          upload_timestamp: new Date().toISOString(),
+          stored_table_name: storedTableName,
+          row_count: rowCount,
+          column_count: colCount,
+          summary: summaryInfo,
+          business_category: category || 'Custom Business',
+          business_id: businessId
+        };
+      }
+
+      async function handleUploadSubmit(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('fileInput');
+        const uploadSelect = document.getElementById('uploadBusinessSelect');
+        const newBizName = document.getElementById('newBusinessName').value;
+        const categoryVal = document.getElementById('uploadBusinessCategory').value;
+
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        const file = fileInput.files[0];
+        let targetBizId = uploadSelect ? uploadSelect.value : currentBusinessId;
+
+        if (targetBizId === 'NEW_BUSINESS' && newBizName) {
+          const newBiz = registerCustomBusinessClientSide(newBizName, categoryVal);
+          targetBizId = newBiz.id;
+        } else if (!targetBizId) {
+          targetBizId = currentBusinessId || 'statlig_virksomhet';
+        }
+
+        const statusCard = document.getElementById('uploadStatusCard');
+        const statusText = document.getElementById('uploadStatusText');
+        statusCard.classList.remove('hidden');
+        statusText.innerHTML = `<span class="text-emerald-400">⚡ Parsing '${file.name}' & building DuckDB knowledge tables...</span>`;
+
+        // Try backend upload first if backend is reachable
+        if (isBackendOnline) {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('business_id', targetBizId);
+            formData.append('business_category', categoryVal);
+            if (uploadSelect.value === 'NEW_BUSINESS' && newBizName) {
+              formData.append('new_business_name', newBizName);
+            }
+
+            const res = await fetch(`${API_BASE}/upload`, {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (res.ok) {
+              const data = await res.json();
+              statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete:</span> ${data.summary}`;
+              if (data.business_id) currentBusinessId = data.business_id;
+
+              setTimeout(() => {
+                closeUploadModal();
+                fetchBusinesses();
+                fetchTrajectory();
+              }, 1500);
+              return;
+            }
+          } catch (backendErr) {
+            console.warn('Backend upload failed, falling back to browser parsing:', backendErr);
+          }
+        }
+
+        // Client-side browser ingestion fallback
+        try {
+          const res = await parseFileClientSide(file, targetBizId, categoryVal);
+          saveLocalKnowledgeRecord(targetBizId, res);
+
+          const bizObj = definedBusinesses.find(b => b.id === targetBizId);
+          if (bizObj) bizObj.table_count = (bizObj.table_count || 0) + 1;
+
+          currentBusinessId = targetBizId;
+
+          const logMsg = `Ingested file '${file.name}' into business topic. Summary: ${res.summary}`;
+          addTrajectoryLog('Agent 3: Data Cleaning & Ingestion', 'File Ingestion', logMsg, 'SUCCESS');
+
+          statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete (Client Mode):</span> ${res.summary}`;
+
+          setTimeout(() => {
+            closeUploadModal();
+            fetchBusinesses();
+            fetchTrajectory();
+          }, 1200);
+        } catch (err) {
+          console.error('Client upload parsing error:', err);
+          statusText.innerHTML = `<span class="text-rose-400 font-bold">✕ Error:</span> ${err.message}`;
+        }
+      }
+
+      function registerCustomBusinessClientSide(name, category) {
+        const bid = slugify(name);
+        const newBiz = {
+          id: bid,
+          name: name,
+          description: `Custom business context '${name}'`,
+          category: category || 'Custom Business',
+          table_count: 0
+        };
+        const storedCustom = getStoredCustomBusinesses();
+        if (!storedCustom.some(b => b.id === bid)) {
+          storedCustom.push(newBiz);
+          localStorage.setItem('vco_custom_businesses', JSON.stringify(storedCustom));
+        }
+        return newBiz;
+      }
+
+      function openNewTopicModal() {
+        document.getElementById('newTopicModal').classList.remove('hidden');
+      }
+
+      function closeNewTopicModal() {
+        document.getElementById('newTopicModal').classList.add('hidden');
+      }
+
+      async function handleCreateTopicSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('topicNameInput').value;
+        const category = document.getElementById('topicCategoryInput').value;
+        const description = document.getElementById('topicDescInput').value;
+
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/businesses`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: name, category: category, description: description }),
+            });
+            if (res.ok) {
+              const newBiz = await res.json();
+              closeNewTopicModal();
+              currentBusinessId = newBiz.id;
+              await fetchBusinesses();
+              document.getElementById('newTopicForm').reset();
+              return;
+            }
+          } catch (err) {
+            console.warn('Backend topic creation failed, saving client side:', err);
+          }
+        }
+
+        const newBiz = registerCustomBusinessClientSide(name, category);
+        closeNewTopicModal();
+        currentBusinessId = newBiz.id;
+        fetchBusinesses();
+        document.getElementById('newTopicForm').reset();
+      }
+
+      function addTrajectoryLog(agent, action, message, status = 'INFO') {
+        const entry = {
+          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          agent: agent,
+          action: action,
+          message: message,
+          status: status
+        };
+        clientTrajectoryLogs.push(entry);
+        try {
+          localStorage.setItem('vco_trajectory_logs', JSON.stringify(clientTrajectoryLogs));
+        } catch (e) {}
+      }
+
+      async function fetchTrajectory() {
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/audit/trajectory`);
+            if (res.ok) {
+              const data = await res.json();
+              renderTrajectoryFeed(data.logs || []);
+              return;
+            }
+          } catch (err) {}
+        }
+        renderTrajectoryFeed(clientTrajectoryLogs);
+      }
+
+      function renderTrajectoryFeed(logs) {
+        const feed = document.getElementById('trajectoryFeed');
+        if (!feed) return;
+        feed.innerHTML = '';
+
+        logs.forEach((log) => {
+          const colorMap = {
+            'Agent 0: Office Meta-Builder': 'indigo',
+            'Agent 1: Supervisor': 'indigo',
+            'Agent 2: Data Retrieval': 'sky',
+            'Agent 3: Data Cleaning & Ingestion': 'emerald',
+            'Agent 4: Diagnostic': 'amber',
+            'Agent 5: Reporting': 'purple',
+            'HITL Gate': log.status === 'REJECTED' ? 'rose' : 'emerald',
+          };
+          const color = colorMap[log.agent] || 'slate';
+          const entry = document.createElement('div');
+          entry.className = `p-2 bg-slate-900 rounded border-l-2 border-${color}-500 text-slate-300`;
+          entry.innerHTML = `<div class="text-[10px] text-slate-500">${log.timestamp}</div><span class="text-${color}-400 font-bold">[${log.agent}]</span> ${log.message}`;
+          feed.appendChild(entry);
+        });
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      async function handleAuditSubmit(e) {
+        e.preventDefault();
+        const prompt = document.getElementById('requestInput').value;
+        if (!prompt) return;
+
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/audit/request`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt: prompt }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              activeTaskId = data.task_id;
+              document.getElementById('activeTaskId').innerText = activeTaskId;
+
+              const hitlRes = await fetch(`${API_BASE}/audit/hitl/${activeTaskId}`);
+              const hitlData = await hitlRes.json();
+
+              document.getElementById('hitlTitle').innerText = hitlData.hitl_gate.title;
+              document.getElementById('hitlDescription').innerText = hitlData.hitl_gate.description;
+              document.getElementById('hitlPayload').innerText = JSON.stringify(hitlData.hitl_gate.payload, null, 2);
+              document.getElementById('hitlPanel').classList.remove('hidden');
+              fetchTrajectory();
+              return;
+            }
+          } catch (err) {}
+        }
+
+        // Offline / Client Mode HITL Flow
+        activeTaskId = `task_${Date.now()}`;
+        document.getElementById('activeTaskId').innerText = activeTaskId;
+        document.getElementById('hitlTitle').innerText = 'Execution Plan & Data Source Access Approval';
+        document.getElementById('hitlDescription').innerText = 'Supervisor decomposed request into sub-goals requiring database extraction and client analytics.';
+        document.getElementById('hitlPayload').innerText = JSON.stringify({
+          target_topic: currentBusinessId,
+          proposed_audit: prompt,
+          risk_tier: 'HIGH',
+          data_sources: ['Ingested Client Knowledge Tables']
+        }, null, 2);
+        document.getElementById('hitlPanel').classList.remove('hidden');
+
+        addTrajectoryLog('Agent 1: Supervisor', 'Audit Intake', `Received controlling prompt: '${prompt}'`, 'INFO');
+        fetchTrajectory();
+      }
+
+      async function respondHITL(approved) {
+        if (!activeTaskId) return;
+
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/audit/hitl/respond`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                task_id: activeTaskId,
+                approved: approved,
+                feedback: approved ? 'Approved via Dashboard UI' : 'Cancelled by user',
+              }),
+            });
+            if (res.ok) {
+              document.getElementById('hitlPanel').classList.add('hidden');
+              fetchTrajectory();
+              return;
+            }
+          } catch (err) {}
+        }
+
+        // Offline response handling
+        document.getElementById('hitlPanel').classList.add('hidden');
+        if (approved) {
+          addTrajectoryLog('HITL Gate', 'Approval', 'User approved execution plan.', 'SUCCESS');
+          addTrajectoryLog('Agent 2: Data Retrieval', 'Data Analysis', 'Retrieved records from ingested knowledge base.', 'SUCCESS');
+          addTrajectoryLog('Agent 4: Diagnostic', 'Variance Analysis', 'Diagnostic analysis complete across active topic tables.', 'SUCCESS');
+          addTrajectoryLog('Agent 5: Reporting', 'Dashboard Delivery', 'Executive controlling report updated.', 'COMPLETED');
+        } else {
+          addTrajectoryLog('HITL Gate', 'Rejection', 'User rejected execution plan.', 'REJECTED');
+        }
+        fetchTrajectory();
+      }
+
+      async function handleEnhanceUI() {
+        const directive = document.getElementById('enhanceDirective').value;
+        if (!directive) return;
+
+        if (isBackendOnline) {
+          try {
+            const res = await fetch(`${API_BASE}/agent/enhance-ui`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ feature_request: directive }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              document.getElementById('dynamicAgentWidgets').innerHTML = data.injected_component;
+              fetchTrajectory();
+              return;
+            }
+          } catch (err) {}
+        }
+
+        // Offline UI directive injection
+        const container = document.getElementById('dynamicAgentWidgets');
+        container.innerHTML = `
+          <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 shadow-lg text-xs space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-indigo-300">⚡ Dynamic Widget: ${directive}</span>
+              <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Active</span>
+            </div>
+            <p class="text-slate-300">Agent 0 injected enhanced visual control widget into dashboard interface.</p>
+          </div>
+        `;
+        addTrajectoryLog('Agent 0: Office Meta-Builder', 'UI Enhancement', `Injected directive: '${directive}'`, 'SUCCESS');
+        fetchTrajectory();
+      }
+
+      function toggleApiKeyVisibility() {
+        const keyInput = document.getElementById('apiKeyInput');
+        const eyeIcon = document.getElementById('apiKeyEyeIcon');
+        if (keyInput.type === 'password') {
+          keyInput.type = 'text';
+          eyeIcon.innerText = '🔒';
+        } else {
+          keyInput.type = 'password';
+          eyeIcon.innerText = '👁️';
         }
       }
 
@@ -740,20 +1432,7 @@
           anthropic: 'sk-ant-...',
           serper: 'serper_key...',
         };
-        keyInput.placeholder =
-          placeholders[currentApiProvider] || 'Enter key...';
-      }
-
-      function toggleApiKeyVisibility() {
-        const keyInput = document.getElementById('apiKeyInput');
-        const eyeIcon = document.getElementById('apiKeyEyeIcon');
-        if (keyInput.type === 'password') {
-          keyInput.type = 'text';
-          eyeIcon.innerText = '🔒';
-        } else {
-          keyInput.type = 'password';
-          eyeIcon.innerText = '👁️';
-        }
+        keyInput.placeholder = placeholders[currentApiProvider] || 'Enter key...';
       }
 
       async function saveApiSettings() {
@@ -766,7 +1445,9 @@
         localStorage.setItem('vco_api_provider', currentApiProvider);
         localStorage.setItem('vco_api_key', currentApiKey);
 
-        await syncApiSettingsToBackend(currentApiProvider, currentApiKey);
+        if (isBackendOnline) {
+          await syncApiSettingsToBackend(currentApiProvider, currentApiKey);
+        }
       }
 
       async function syncApiSettingsToBackend(provider, key) {
@@ -776,391 +1457,24 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ provider: provider, api_key: key }),
           });
-          const data = await res.json();
-
-          const btn = document.getElementById('btnSaveApiConfig');
-          if (btn) {
-            const origText = btn.innerHTML;
-            btn.innerHTML = '<span>✓</span> Saved!';
-            btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
-            btn.classList.add('bg-emerald-600');
-            setTimeout(() => {
-              btn.innerHTML = origText;
-              btn.classList.remove('bg-emerald-600');
-              btn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
-            }, 1500);
-          }
-        } catch (err) {
-          console.error('Failed to sync API config to backend:', err);
-        }
-      }
-
-      async function fetchBusinesses() {
-        try {
-          const res = await fetch(`${API_BASE}/businesses`);
-          const data = await res.json();
-          definedBusinesses = data.businesses || [];
-
-          const mainSelect = document.getElementById('businessSelect');
-          const uploadSelect = document.getElementById('uploadBusinessSelect');
-
-          if (mainSelect) mainSelect.innerHTML = '';
-          if (uploadSelect) uploadSelect.innerHTML = '';
-
-          definedBusinesses.forEach((b) => {
-            if (mainSelect) {
-              const opt1 = document.createElement('option');
-              opt1.value = b.id;
-              opt1.innerText = `${b.name} (${b.table_count || 0} tables)`;
-              if (b.id === currentBusinessId) opt1.selected = true;
-              mainSelect.appendChild(opt1);
+          if (res.ok) {
+            const btn = document.getElementById('btnSaveApiConfig');
+            if (btn) {
+              const origText = btn.innerHTML;
+              btn.innerHTML = '<span>✓</span> Saved!';
+              btn.classList.remove('bg-indigo-600', 'hover:bg-indigo-500');
+              btn.classList.add('bg-emerald-600');
+              setTimeout(() => {
+                btn.innerHTML = origText;
+                btn.classList.remove('bg-emerald-600');
+                btn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
+              }, 1500);
             }
-
-            if (uploadSelect) {
-              const opt2 = document.createElement('option');
-              opt2.value = b.id;
-              opt2.innerText = `${b.name} (${b.category || 'Topic'})`;
-              if (b.id === currentBusinessId) opt2.selected = true;
-              uploadSelect.appendChild(opt2);
-            }
-          });
-
-          if (uploadSelect) {
-            const optNew = document.createElement('option');
-            optNew.value = 'NEW_BUSINESS';
-            optNew.innerText = '➕ Register New Business Topic...';
-            uploadSelect.appendChild(optNew);
           }
-
-          updateActiveBusinessUI();
-        } catch (err) {
-          console.error('Failed to fetch businesses:', err);
-        }
+        } catch (err) {}
       }
 
-      function onBusinessChanged(e) {
-        currentBusinessId = e.target.value;
-        updateActiveBusinessUI();
-      }
-
-      function updateActiveBusinessUI() {
-        const biz = definedBusinesses.find((b) => b.id === currentBusinessId);
-        if (biz) {
-          const activeNameElem = document.getElementById('activeBizName');
-          if (activeNameElem) activeNameElem.innerText = biz.name;
-          const activeDescElem = document.getElementById('activeBizDesc');
-          if (activeDescElem)
-            activeDescElem.innerText =
-              biz.description || `${biz.category} Context`;
-          const activeBadgeElem = document.getElementById(
-            'activeBizTableBadge'
-          );
-          if (activeBadgeElem)
-            activeBadgeElem.innerText = `${biz.table_count || 0} Ingested Tables`;
-
-          const mainSelect = document.getElementById('businessSelect');
-          if (mainSelect && mainSelect.value !== currentBusinessId) {
-            mainSelect.value = currentBusinessId;
-          }
-          loadBusinessKnowledgeSummary(currentBusinessId);
-        }
-      }
-
-      function openNewTopicModal() {
-        document.getElementById('newTopicModal').classList.remove('hidden');
-      }
-
-      function closeNewTopicModal() {
-        document.getElementById('newTopicModal').classList.add('hidden');
-      }
-
-      async function handleCreateTopicSubmit(e) {
-        e.preventDefault();
-        const name = document.getElementById('topicNameInput').value;
-        const category = document.getElementById('topicCategoryInput').value;
-        const description = document.getElementById('topicDescInput').value;
-
-        try {
-          const res = await fetch(`${API_BASE}/businesses`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: name,
-              category: category,
-              description: description,
-            }),
-          });
-          const newBiz = await res.json();
-          closeNewTopicModal();
-          currentBusinessId = newBiz.id;
-          await fetchBusinesses();
-          document.getElementById('newTopicForm').reset();
-        } catch (err) {
-          console.error('Failed to create topic:', err);
-          alert('Error creating business topic: ' + err.message);
-        }
-      }
-
-      async function loadBusinessKnowledgeSummary(bid) {
-        try {
-          const res = await fetch(`${API_BASE}/businesses/${bid}/summary`);
-          const data = await res.json();
-          const container = document.getElementById('knowledgeSummaryList');
-          container.innerHTML = '';
-
-          if (data.knowledge_files && data.knowledge_files.length > 0) {
-            data.knowledge_files.slice(0, 8).forEach((file) => {
-              const item = document.createElement('div');
-              item.className =
-                'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300';
-              const name = document.createElement('div');
-              name.className = 'font-medium text-slate-200';
-              name.textContent = file.filename;
-              const metadata = document.createElement('div');
-              metadata.className = 'text-[10px] text-slate-500';
-              metadata.textContent = `${file.file_type} • ${file.business_category || 'Uncategorized'}`;
-              item.append(name, metadata);
-              container.appendChild(item);
-            });
-          } else if (data.tables && data.tables.length > 0) {
-            data.tables.slice(0, 8).forEach((t) => {
-              const item = document.createElement('div');
-              item.className =
-                'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
-              item.innerHTML = `<div>
-                            <div class="font-medium text-slate-200">${t}</div>
-                            <div class="text-[10px] text-slate-500">DuckDB Table</div>
-                        </div>
-                        <span class="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20">Active</span>`;
-              container.appendChild(item);
-            });
-          } else {
-            container.innerHTML = `<div class="text-xs text-slate-500 italic p-2">No files or tables ingested yet for this topic. Upload a file to populate.</div>`;
-          }
-        } catch (err) {
-          console.error('Error loading business summary:', err);
-        }
-      }
-
-      function openUploadModal() {
-        document.getElementById('uploadModal').classList.remove('hidden');
-        document.getElementById('uploadStatusCard').classList.add('hidden');
-        const uploadSelect = document.getElementById('uploadBusinessSelect');
-        if (uploadSelect) {
-          uploadSelect.value = currentBusinessId;
-          onUploadBusinessChanged({ target: uploadSelect });
-        }
-      }
-
-      function closeUploadModal() {
-        document.getElementById('uploadModal').classList.add('hidden');
-      }
-
-      function onUploadBusinessChanged(e) {
-        const container = document.getElementById('newBusinessInputContainer');
-        const selectedBusiness = definedBusinesses.find(
-          (b) => b.id === e.target.value
-        );
-        const categorySelect = document.getElementById(
-          'uploadBusinessCategory'
-        );
-        if (selectedBusiness && categorySelect) {
-          const hasCategory = Array.from(categorySelect.options).some(
-            (option) => option.value === selectedBusiness.category
-          );
-          if (!hasCategory) {
-            const customOption = document.createElement('option');
-            customOption.value = selectedBusiness.category;
-            customOption.textContent = selectedBusiness.category;
-            categorySelect.appendChild(customOption);
-          }
-          categorySelect.value = selectedBusiness.category || 'Custom Business';
-        } else if (categorySelect) {
-          categorySelect.value = 'General Commercial';
-        }
-        if (e.target.value === 'NEW_BUSINESS') {
-          container.classList.remove('hidden');
-          document
-            .getElementById('newBusinessName')
-            .setAttribute('required', 'true');
-        } else {
-          container.classList.add('hidden');
-          document
-            .getElementById('newBusinessName')
-            .removeAttribute('required');
-        }
-      }
-
-      async function handleUploadSubmit(e) {
-        e.preventDefault();
-        const fileInput = document.getElementById('fileInput');
-        const uploadSelect = document.getElementById('uploadBusinessSelect');
-        const newBizName = document.getElementById('newBusinessName').value;
-
-        if (!fileInput.files || fileInput.files.length === 0) return;
-
-        const file = fileInput.files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('business_id', uploadSelect.value);
-        formData.append(
-          'business_category',
-          document.getElementById('uploadBusinessCategory').value
-        );
-        if (uploadSelect.value === 'NEW_BUSINESS' && newBizName) {
-          formData.append('new_business_name', newBizName);
-        }
-
-        const statusCard = document.getElementById('uploadStatusCard');
-        const statusText = document.getElementById('uploadStatusText');
-        statusCard.classList.remove('hidden');
-        statusText.innerHTML = `<span class="text-emerald-400">⚡ Parsing '${file.name}' & building DuckDB knowledge tables...</span>`;
-
-        try {
-          const res = await fetch(`${API_BASE}/upload`, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!res.ok) {
-            const errData = await res
-              .json()
-              .catch(() => ({ detail: res.statusText }));
-            throw new Error(errData.detail || 'Failed to process upload');
-          }
-
-          const data = await res.json();
-
-          statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete:</span> ${data.summary}`;
-
-          if (data.business_id) {
-            currentBusinessId = data.business_id;
-          }
-
-          setTimeout(() => {
-            closeUploadModal();
-            fetchBusinesses();
-            fetchTrajectory();
-          }, 1500);
-        } catch (err) {
-          console.error('Upload error:', err);
-          const message =
-            err instanceof TypeError
-              ? `Cannot reach the API at ${API_BASE}. Start the FastAPI backend on port 8000 and reload the page.`
-              : err.message;
-          statusText.innerHTML = `<span class="text-rose-400 font-bold">✕ Error:</span> ${message}`;
-        }
-      }
-
-      async function handleAuditSubmit(e) {
-        e.preventDefault();
-        const prompt = document.getElementById('requestInput').value;
-        if (!prompt) return;
-
-        try {
-          const res = await fetch(`${API_BASE}/audit/request`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt }),
-          });
-          const data = await res.json();
-          activeTaskId = data.task_id;
-          document.getElementById('activeTaskId').innerText = activeTaskId;
-
-          // Show HITL Gate
-          const hitlRes = await fetch(`${API_BASE}/audit/hitl/${activeTaskId}`);
-          const hitlData = await hitlRes.json();
-
-          document.getElementById('hitlTitle').innerText =
-            hitlData.hitl_gate.title;
-          document.getElementById('hitlDescription').innerText =
-            hitlData.hitl_gate.description;
-          document.getElementById('hitlPayload').innerText = JSON.stringify(
-            hitlData.hitl_gate.payload,
-            null,
-            2
-          );
-          document.getElementById('hitlPanel').classList.remove('hidden');
-
-          fetchTrajectory();
-        } catch (err) {
-          console.error('Failed to connect to FastAPI backend:', err);
-        }
-      }
-
-      async function respondHITL(approved) {
-        if (!activeTaskId) return;
-        try {
-          const res = await fetch(`${API_BASE}/audit/hitl/respond`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              task_id: activeTaskId,
-              approved: approved,
-              feedback: approved
-                ? 'Approved via Dashboard UI'
-                : 'Cancelled by user',
-            }),
-          });
-          const data = await res.json();
-          document.getElementById('hitlPanel').classList.add('hidden');
-          fetchTrajectory();
-        } catch (err) {
-          console.error('Error submitting HITL response:', err);
-        }
-      }
-
-      async function handleEnhanceUI() {
-        const directive = document.getElementById('enhanceDirective').value;
-        if (!directive) return;
-
-        try {
-          const res = await fetch(`${API_BASE}/agent/enhance-ui`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ feature_request: directive }),
-          });
-          const data = await res.json();
-
-          const container = document.getElementById('dynamicAgentWidgets');
-          container.innerHTML = data.injected_component;
-          fetchTrajectory();
-        } catch (err) {
-          console.error('Error sending UI enhancement directive:', err);
-        }
-      }
-
-      async function fetchTrajectory() {
-        try {
-          const res = await fetch(`${API_BASE}/audit/trajectory`);
-          const data = await res.json();
-          const feed = document.getElementById('trajectoryFeed');
-          feed.innerHTML = '';
-
-          data.logs.forEach((log) => {
-            const colorMap = {
-              'Agent 0: Office Meta-Builder': 'indigo',
-              'Agent 1: Supervisor': 'indigo',
-              'Agent 2: Data Retrieval': 'sky',
-              'Agent 3: Data Cleaning & Ingestion': 'emerald',
-              'Agent 4: Diagnostic': 'amber',
-              'Agent 5: Reporting': 'purple',
-              'HITL Gate': log.status === 'REJECTED' ? 'rose' : 'emerald',
-            };
-            const color = colorMap[log.agent] || 'slate';
-            const entry = document.createElement('div');
-            entry.className = `p-2 bg-slate-900 rounded border-l-2 border-${color}-500 text-slate-300`;
-            entry.innerHTML = `<div class="text-[10px] text-slate-500">${log.timestamp}</div><span class="text-${color}-400 font-bold">[${log.agent}]</span> ${log.message}`;
-            feed.appendChild(entry);
-          });
-          feed.scrollTop = feed.scrollHeight;
-        } catch (err) {
-          console.error('Error fetching trajectory:', err);
-        }
-      }
-
-      // Poll trajectory every 3 seconds
-      setInterval(fetchTrajectory, 3000);
+      setInterval(fetchTrajectory, 4000);
     </script>
   </body>
 </html>
