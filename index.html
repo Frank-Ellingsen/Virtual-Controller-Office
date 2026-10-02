@@ -42,7 +42,7 @@
             >Business Context:</span
           >
           <select
-            id="businessSelect"
+            id="businessContextSelect"
             onchange="onBusinessChanged(event)"
             class="bg-transparent text-xs font-semibold text-emerald-400 focus:outline-none cursor-pointer"
           >
@@ -310,39 +310,47 @@
             <div
               class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50"
             >
-              <div class="text-xs text-slate-400">Operating Expenses</div>
+              <div id="netVarianceLabel" class="text-xs text-slate-400">
+                Operating Expenses
+              </div>
               <div id="netVarianceVal" class="text-xl font-bold text-rose-400">
                 65.08M NOK
               </div>
-              <div class="text-[10px] text-slate-500">
+              <div id="netVarianceDetail" class="text-[10px] text-slate-500">
                 Class 5 & 6 (SRS R-102)
               </div>
             </div>
             <div
               class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50"
             >
-              <div class="text-xs text-slate-400">BOA Overrun Risk</div>
+              <div id="primaryDriverLabel" class="text-xs text-slate-400">
+                BOA Overrun Risk
+              </div>
               <div
                 id="primaryDriverVal"
                 class="text-xl font-bold text-amber-400"
               >
                 EVU001 (Red)
               </div>
-              <div class="text-[10px] text-slate-500">
+              <div id="primaryDriverDetail" class="text-[10px] text-slate-500">
                 SRS 10 Oppdragsforskning
               </div>
             </div>
             <div
               class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50"
             >
-              <div class="text-xs text-slate-400">Planned Mitigation</div>
+              <div id="forecastImpactLabel" class="text-xs text-slate-400">
+                Planned Mitigation
+              </div>
               <div
                 id="forecastImpactVal"
                 class="text-xl font-bold text-emerald-400"
               >
                 4.35M NOK
               </div>
-              <div class="text-[10px] text-slate-500">6 active FactActions</div>
+              <div id="forecastImpactDetail" class="text-[10px] text-slate-500">
+                6 active FactActions
+              </div>
             </div>
           </div>
 
@@ -353,7 +361,9 @@
             <h4
               class="text-xs font-semibold uppercase tracking-wider text-slate-400"
             >
-              Prescriptive Recommendations (FactAction)
+              <span id="prescriptiveTitle"
+                >Prescriptive Recommendations (FactAction)</span
+              >
             </h4>
             <ul
               id="prescriptiveList"
@@ -691,37 +701,43 @@
         {
           id: 'statlig_virksomhet',
           name: 'Statlig Virksomhet (DFØ / SRS)',
-          description: 'State Education & Research Institution under DFØ & SRS regulations (UiA Context)',
+          description:
+            'State Education & Research Institution under DFØ & SRS regulations (UiA Context)',
           category: 'Public Sector / Government',
-          table_count: 0
+          table_count: 0,
         },
         {
           id: 'logistics_eu',
           name: 'EU Logistics & Freight Enterprise',
-          description: 'Global Freight, Transportation & Logistics Variance Audit',
+          description:
+            'Global Freight, Transportation & Logistics Variance Audit',
           category: 'Commercial Supply Chain',
-          table_count: 0
+          table_count: 0,
         },
         {
           id: 'umoe_mandal_defense',
           name: 'Umoe Mandal Defense & Maritime',
-          description: 'Naval Defense & Composite Shipyard Project Controlling (EAC/ETC)',
+          description:
+            'Naval Defense & Composite Shipyard Project Controlling (EAC/ETC)',
           category: 'Defense & Maritime Engineering',
-          table_count: 0
+          table_count: 0,
         },
         {
           id: 'premier_league',
           name: 'Premier League & Sports Analytics',
-          description: 'English Premier League Match Data, Financial Performance & Operational Metrics',
+          description:
+            'English Premier League Match Data, Financial Performance & Operational Metrics',
           category: 'Sports & Entertainment Analytics',
-          table_count: 0
-        }
+          table_count: 0,
+        },
       ];
 
       function getApiBaseUrl() {
         if (window.location.port === '8000') return '/api';
-        if (window.location.protocol === 'file:') return 'http://localhost:8000/api';
+        if (window.location.protocol === 'file:')
+          return 'http://localhost:8000/api';
         const hostname = window.location.hostname || 'localhost';
+        if (hostname.endsWith('.github.io')) return '';
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
           return 'http://localhost:8000/api';
         }
@@ -737,17 +753,26 @@
       let isBackendOnline = false;
       let clientTrajectoryLogs = [
         {
-          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          timestamp: new Date()
+            .toISOString()
+            .replace('T', ' ')
+            .substring(0, 19),
           agent: 'Agent 1: Supervisor',
           action: 'System Active',
-          message: 'Virtual Controller Office Dashboard initialized in Browser Ingestion Mode.',
-          status: 'INFO'
-        }
+          message:
+            'Virtual Controller Office Dashboard initialized in Browser Ingestion Mode.',
+          status: 'INFO',
+        },
       ];
 
       function slugify(text) {
         if (!text) return 'unnamed';
-        return text.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '_').replace(/^_+|_+$/g, '');
+        return text
+          .toLowerCase()
+          .trim()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/[\s_-]+/g, '_')
+          .replace(/^_+|_+$/g, '');
       }
 
       window.addEventListener('DOMContentLoaded', () => {
@@ -757,7 +782,8 @@
       });
 
       function initApiSettings() {
-        const savedProvider = localStorage.getItem('vco_api_provider') || 'gemini';
+        const savedProvider =
+          localStorage.getItem('vco_api_provider') || 'gemini';
         const savedKey = localStorage.getItem('vco_api_key') || '';
 
         currentApiProvider = savedProvider;
@@ -770,7 +796,7 @@
         if (keyInput) keyInput.value = savedKey;
 
         updateApiKeyPlaceholder();
-        if (savedKey) {
+        if (savedKey && API_BASE) {
           syncApiSettingsToBackend(savedProvider, savedKey);
         }
       }
@@ -780,18 +806,25 @@
         const badge = document.getElementById('backendStatusBadge');
         if (!badge) return;
         if (online) {
-          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-          badge.innerHTML = "● FastAPI Backend Online";
+          badge.className =
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+          badge.innerHTML = '● FastAPI Backend Online';
         } else {
-          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20";
-          badge.innerHTML = "● Browser Ingestion Mode";
-          badge.title = "Backend offline or static GitHub Pages mode. Excel/CSV files parse directly in browser.";
+          badge.className =
+            'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20';
+          badge.innerHTML = '● Browser Ingestion Mode';
+          badge.title =
+            'Backend offline or static GitHub Pages mode. Excel/CSV files parse directly in browser.';
         }
       }
 
       async function fetchBusinesses() {
         try {
-          const res = await fetch(`${API_BASE}/businesses`, { signal: AbortSignal.timeout(3000) });
+          if (!API_BASE)
+            throw new Error('Static hosting uses browser-only mode');
+          const res = await fetch(`${API_BASE}/businesses`, {
+            signal: AbortSignal.timeout(3000),
+          });
           if (res.ok) {
             const data = await res.json();
             const serverBiz = data.businesses || [];
@@ -809,7 +842,9 @@
 
       function getStoredCustomBusinesses() {
         try {
-          return JSON.parse(localStorage.getItem('vco_custom_businesses') || '[]');
+          return JSON.parse(
+            localStorage.getItem('vco_custom_businesses') || '[]'
+          );
         } catch (e) {
           return [];
         }
@@ -817,34 +852,42 @@
 
       function mergeAndSetBusinesses(bizList) {
         const map = new Map();
-        [...DEFAULT_BUSINESSES, ...getStoredCustomBusinesses(), ...bizList].forEach(b => {
+        [
+          ...DEFAULT_BUSINESSES,
+          ...getStoredCustomBusinesses(),
+          ...bizList,
+        ].forEach((b) => {
           if (b && b.id) map.set(b.id, b);
         });
         definedBusinesses = Array.from(map.values());
 
         // Update table counts from local knowledge store
         const localKnowledge = getLocalKnowledgeStore();
-        definedBusinesses.forEach(b => {
+        definedBusinesses.forEach((b) => {
           const files = localKnowledge[b.id] || [];
           if (files.length > 0 && (!b.table_count || b.table_count === 0)) {
             b.table_count = files.length;
           }
         });
 
-        const mainSelect = document.getElementById('businessSelect');
+        const mainSelects = document.querySelectorAll(
+          '#businessSelect, #businessContextSelect'
+        );
         const uploadSelect = document.getElementById('uploadBusinessSelect');
 
-        if (mainSelect) mainSelect.innerHTML = '';
+        mainSelects.forEach((select) => {
+          select.innerHTML = '';
+        });
         if (uploadSelect) uploadSelect.innerHTML = '';
 
         definedBusinesses.forEach((b) => {
-          if (mainSelect) {
+          mainSelects.forEach((mainSelect) => {
             const opt1 = document.createElement('option');
             opt1.value = b.id;
             opt1.innerText = `${b.name} (${b.table_count || 0} tables)`;
             if (b.id === currentBusinessId) opt1.selected = true;
             mainSelect.appendChild(opt1);
-          }
+          });
 
           if (uploadSelect) {
             const opt2 = document.createElement('option');
@@ -863,12 +906,18 @@
         }
 
         // Ensure a valid business is selected
-        if (definedBusinesses.length > 0 && !definedBusinesses.some(b => b.id === currentBusinessId)) {
+        if (
+          definedBusinesses.length > 0 &&
+          !definedBusinesses.some((b) => b.id === currentBusinessId)
+        ) {
           currentBusinessId = definedBusinesses[0].id;
         }
 
-        if (mainSelect) mainSelect.value = currentBusinessId;
-        if (uploadSelect && uploadSelect.value !== 'NEW_BUSINESS') uploadSelect.value = currentBusinessId;
+        mainSelects.forEach((select) => {
+          select.value = currentBusinessId;
+        });
+        if (uploadSelect && uploadSelect.value !== 'NEW_BUSINESS')
+          uploadSelect.value = currentBusinessId;
 
         updateActiveBusinessUI();
       }
@@ -883,19 +932,29 @@
         if (biz) {
           const activeDescElem = document.getElementById('activeBizDesc');
           if (activeDescElem) {
-            activeDescElem.innerText = biz.description || `${biz.category} Context`;
+            activeDescElem.innerText =
+              biz.description || `${biz.category} Context`;
           }
-          const activeBadgeElem = document.getElementById('activeBizTableBadge');
+          const activeBadgeElem = document.getElementById(
+            'activeBizTableBadge'
+          );
           if (activeBadgeElem) {
             const localKnowledge = getLocalKnowledgeStore();
-            const count = (localKnowledge[biz.id] || []).length || biz.table_count || 0;
+            const count =
+              (localKnowledge[biz.id] || []).length || biz.table_count || 0;
             activeBadgeElem.innerText = `${count} Ingested Tables`;
           }
 
-          const mainSelect = document.getElementById('businessSelect');
-          if (mainSelect && mainSelect.value !== currentBusinessId) {
-            mainSelect.value = currentBusinessId;
-          }
+          document
+            .querySelectorAll('#businessSelect, #businessContextSelect')
+            .forEach((select) => {
+              if (select.value !== currentBusinessId)
+                select.value = currentBusinessId;
+            });
+          const reportStatus = document.getElementById('reportStatus');
+          if (reportStatus)
+            reportStatus.innerText = `Active Dataset: ${biz.name}`;
+          renderClientDashboard(currentBusinessId);
           loadBusinessKnowledgeSummary(currentBusinessId);
         }
       }
@@ -903,6 +962,12 @@
       function openUploadModal() {
         document.getElementById('uploadModal').classList.remove('hidden');
         document.getElementById('uploadStatusCard').classList.add('hidden');
+        const uploadButton = document.getElementById('btnSubmitUpload');
+        if (uploadButton) {
+          uploadButton.innerHTML = isBackendOnline
+            ? '<span>⚡</span> Process & Store to Knowledge DB'
+            : '<span>⚡</span> Parse & Save in This Browser';
+        }
         const uploadSelect = document.getElementById('uploadBusinessSelect');
         if (uploadSelect) {
           if (!uploadSelect.value || uploadSelect.value === 'NEW_BUSINESS') {
@@ -918,8 +983,12 @@
 
       function onUploadBusinessChanged(e) {
         const container = document.getElementById('newBusinessInputContainer');
-        const selectedBusiness = definedBusinesses.find((b) => b.id === e.target.value);
-        const categorySelect = document.getElementById('uploadBusinessCategory');
+        const selectedBusiness = definedBusinesses.find(
+          (b) => b.id === e.target.value
+        );
+        const categorySelect = document.getElementById(
+          'uploadBusinessCategory'
+        );
 
         if (selectedBusiness && categorySelect) {
           const hasCategory = Array.from(categorySelect.options).some(
@@ -938,16 +1007,22 @@
 
         if (e.target.value === 'NEW_BUSINESS') {
           container.classList.remove('hidden');
-          document.getElementById('newBusinessName').setAttribute('required', 'true');
+          document
+            .getElementById('newBusinessName')
+            .setAttribute('required', 'true');
         } else {
           container.classList.add('hidden');
-          document.getElementById('newBusinessName').removeAttribute('required');
+          document
+            .getElementById('newBusinessName')
+            .removeAttribute('required');
         }
       }
 
       function getLocalKnowledgeStore() {
         try {
-          return JSON.parse(localStorage.getItem('vco_local_knowledge') || '{}');
+          return JSON.parse(
+            localStorage.getItem('vco_local_knowledge') || '{}'
+          );
         } catch (e) {
           return {};
         }
@@ -958,6 +1033,148 @@
         if (!store[bizId]) store[bizId] = [];
         store[bizId].unshift(record);
         localStorage.setItem('vco_local_knowledge', JSON.stringify(store));
+      }
+
+      function getPremierLeagueStats(businessId) {
+        if (businessId !== 'premier_league') return null;
+        const files = getLocalKnowledgeStore()[businessId] || [];
+        const workbook = files.find(
+          (file) => Array.isArray(file.tables) && file.tables.length > 0
+        );
+        if (!workbook) return null;
+
+        const stats = {
+          matches: 0,
+          homeWins: 0,
+          awayWins: 0,
+          draws: 0,
+          homeGoals: 0,
+          awayGoals: 0,
+          seasons: [],
+        };
+        workbook.tables.forEach((table) => {
+          const headers = table.headers.map((header) =>
+            String(header || '')
+              .trim()
+              .toLowerCase()
+          );
+          const homeIndex = headers.indexOf('homegoals');
+          const awayIndex = headers.indexOf('awaygoals');
+          if (homeIndex < 0 || awayIndex < 0) return;
+
+          const seasonStats = {
+            name: table.name,
+            matches: 0,
+            homeWins: 0,
+            awayWins: 0,
+            draws: 0,
+          };
+          table.rows.forEach((row) => {
+            const home = Number(row[homeIndex]);
+            const away = Number(row[awayIndex]);
+            if (!Number.isFinite(home) || !Number.isFinite(away)) return;
+            stats.matches += 1;
+            seasonStats.matches += 1;
+            stats.homeGoals += home;
+            stats.awayGoals += away;
+            if (home > away) {
+              stats.homeWins += 1;
+              seasonStats.homeWins += 1;
+            } else if (home < away) {
+              stats.awayWins += 1;
+              seasonStats.awayWins += 1;
+            } else {
+              stats.draws += 1;
+              seasonStats.draws += 1;
+            }
+          });
+          if (seasonStats.matches) stats.seasons.push(seasonStats);
+        });
+        return stats.matches ? stats : null;
+      }
+
+      function renderClientDashboard(businessId) {
+        if (isBackendOnline) return;
+        const list = document.getElementById('prescriptiveList');
+        const title = document.getElementById('prescriptiveTitle');
+        if (businessId !== 'premier_league') {
+          document.getElementById('netVarianceLabel').innerText =
+            'Dataset Metrics';
+          document.getElementById('primaryDriverLabel').innerText =
+            'Analysis Status';
+          document.getElementById('forecastImpactLabel').innerText =
+            'Data Source';
+          document.getElementById('netVarianceVal').innerText = '—';
+          document.getElementById('primaryDriverVal').innerText =
+            'Not analyzed';
+          document.getElementById('forecastImpactVal').innerText =
+            'Browser upload';
+          document.getElementById('netVarianceDetail').innerText =
+            'Upload a structured workbook to calculate metrics';
+          document.getElementById('primaryDriverDetail').innerText =
+            'Metrics are calculated in this browser';
+          document.getElementById('forecastImpactDetail').innerText =
+            'Files remain in this browser profile';
+          if (title) title.innerText = 'Dataset Analysis';
+          if (list)
+            list.innerHTML =
+              '<li>Upload the workbook for a business topic to view supported client-side analysis.</li>';
+          return;
+        }
+        const stats = getPremierLeagueStats(businessId);
+        const labels = {
+          netVarianceLabel: 'Matches Analyzed',
+          primaryDriverLabel: 'Home Win Rate',
+          forecastImpactLabel: 'Goals Per Match',
+        };
+        Object.entries(labels).forEach(([id, text]) => {
+          const element = document.getElementById(id);
+          if (element) element.innerText = text;
+        });
+
+        if (title) title.innerText = 'Match Results by Season';
+        if (!stats) {
+          document.getElementById('netVarianceVal').innerText =
+            'Upload workbook';
+          document.getElementById('primaryDriverVal').innerText = '—';
+          document.getElementById('forecastImpactVal').innerText = '—';
+          document.getElementById('netVarianceDetail').innerText =
+            'Select the Premier League workbook to analyze match results';
+          document.getElementById('primaryDriverDetail').innerText =
+            'Home wins compared with all valid matches';
+          document.getElementById('forecastImpactDetail').innerText =
+            'Total goals divided by matches analyzed';
+          if (list)
+            list.innerHTML =
+              '<li>Upload <strong>premier_league_games.xlsx</strong> to populate these metrics from its match rows.</li>';
+          return;
+        }
+
+        const totalGoals = stats.homeGoals + stats.awayGoals;
+        document.getElementById('netVarianceVal').innerText =
+          stats.matches.toLocaleString();
+        document.getElementById('primaryDriverVal').innerText =
+          `${((stats.homeWins / stats.matches) * 100).toFixed(1)}%`;
+        document.getElementById('forecastImpactVal').innerText = (
+          totalGoals / stats.matches
+        ).toFixed(2);
+        document.getElementById('netVarianceDetail').innerText =
+          `${stats.seasons.length} seasons • ${totalGoals.toLocaleString()} total goals`;
+        document.getElementById('primaryDriverDetail').innerText =
+          `${stats.homeWins} home wins • ${stats.awayWins} away wins • ${stats.draws} draws`;
+        document.getElementById('forecastImpactDetail').innerText =
+          `${stats.homeGoals.toLocaleString()} home goals • ${stats.awayGoals.toLocaleString()} away goals`;
+        if (list) {
+          list.innerHTML = '';
+          stats.seasons.forEach((season) => {
+            const item = document.createElement('li');
+            item.textContent = `${season.name}: ${season.matches} matches — ${season.homeWins} home wins, ${season.awayWins} away wins, ${season.draws} draws.`;
+            list.appendChild(item);
+          });
+          const overall = document.createElement('li');
+          overall.textContent = `Overall result split: ${stats.homeWins} home wins, ${stats.awayWins} away wins, ${stats.draws} draws.`;
+          list.appendChild(overall);
+        }
       }
 
       async function loadBusinessKnowledgeSummary(bid) {
@@ -997,7 +1214,8 @@
         container.innerHTML = '';
         files.slice(0, 8).forEach((file) => {
           const item = document.createElement('div');
-          item.className = 'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
+          item.className =
+            'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
           item.innerHTML = `
             <div>
               <div class="font-medium text-slate-200">${file.filename}</div>
@@ -1013,7 +1231,8 @@
         container.innerHTML = '';
         tables.slice(0, 8).forEach((t) => {
           const item = document.createElement('div');
-          item.className = 'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
+          item.className =
+            'p-2.5 bg-slate-900 rounded border border-slate-700/60 text-slate-300 flex justify-between items-center';
           item.innerHTML = `<div>
             <div class="font-medium text-slate-200">${t}</div>
             <div class="text-[10px] text-slate-500">DuckDB Table</div>
@@ -1024,11 +1243,14 @@
       }
 
       async function parseFileClientSide(file, businessId, category) {
-        const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        const ext = file.name
+          .substring(file.name.lastIndexOf('.'))
+          .toLowerCase();
         let summaryInfo = '';
         let storedTableName = '';
         let rowCount = 0;
         let colCount = 0;
+        const tables = [];
 
         if (['.xlsx', '.xls', '.xlsm', '.csv'].includes(ext)) {
           if (typeof XLSX !== 'undefined') {
@@ -1039,22 +1261,40 @@
 
             workbook.SheetNames.forEach((sheetName) => {
               const worksheet = workbook.Sheets[sheetName];
-              const jsonRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+              const jsonRows = XLSX.utils.sheet_to_json(worksheet, {
+                header: 1,
+              });
               if (!jsonRows || jsonRows.length === 0) return;
 
               const headers = jsonRows[0] || [];
-              const dataRows = jsonRows.slice(1);
+              const dataRows = jsonRows
+                .slice(1)
+                .filter((row) =>
+                  row.some(
+                    (cell) => cell !== null && cell !== undefined && cell !== ''
+                  )
+                );
               const rows = dataRows.length;
               rowCount += rows;
               colCount = headers.length;
 
               const cleanSheet = slugify(sheetName);
-              const sheetTableName = (workbook.SheetNames.length === 1 || ['sheet1', 'table1', 'data'].includes(cleanSheet))
-                ? `tbl_${baseFname}`
-                : `tbl_${baseFname}_${cleanSheet}`;
+              const sheetTableName =
+                workbook.SheetNames.length === 1 ||
+                ['sheet1', 'table1', 'data'].includes(cleanSheet)
+                  ? `tbl_${baseFname}`
+                  : `tbl_${baseFname}_${cleanSheet}`;
 
               if (!storedTableName) storedTableName = sheetTableName;
-              sheetsCreated.push(`${sheetTableName} (${rows} rows, ${colCount} cols)`);
+              sheetsCreated.push(
+                `${sheetTableName} (${rows} rows, ${colCount} cols)`
+              );
+              tables.push({
+                name: sheetName,
+                tableName: sheetTableName,
+                headers,
+                rows: dataRows,
+              });
             });
 
             summaryInfo = `Ingested Excel workbook '${file.name}' into ${sheetsCreated.length || 1} table(s): ${sheetsCreated.join(', ') || `tbl_${baseFname}`}`;
@@ -1084,11 +1324,12 @@
           file_size_bytes: file.size,
           upload_timestamp: new Date().toISOString(),
           stored_table_name: storedTableName,
+          tables,
           row_count: rowCount,
           column_count: colCount,
           summary: summaryInfo,
           business_category: category || 'Custom Business',
-          business_id: businessId
+          business_id: businessId,
         };
       }
 
@@ -1097,7 +1338,9 @@
         const fileInput = document.getElementById('fileInput');
         const uploadSelect = document.getElementById('uploadBusinessSelect');
         const newBizName = document.getElementById('newBusinessName').value;
-        const categoryVal = document.getElementById('uploadBusinessCategory').value;
+        const categoryVal = document.getElementById(
+          'uploadBusinessCategory'
+        ).value;
 
         if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -1105,7 +1348,10 @@
         let targetBizId = uploadSelect ? uploadSelect.value : currentBusinessId;
 
         if (targetBizId === 'NEW_BUSINESS' && newBizName) {
-          const newBiz = registerCustomBusinessClientSide(newBizName, categoryVal);
+          const newBiz = registerCustomBusinessClientSide(
+            newBizName,
+            categoryVal
+          );
           targetBizId = newBiz.id;
         } else if (!targetBizId) {
           targetBizId = currentBusinessId || 'statlig_virksomhet';
@@ -1114,7 +1360,7 @@
         const statusCard = document.getElementById('uploadStatusCard');
         const statusText = document.getElementById('uploadStatusText');
         statusCard.classList.remove('hidden');
-        statusText.innerHTML = `<span class="text-emerald-400">⚡ Parsing '${file.name}' & building DuckDB knowledge tables...</span>`;
+        statusText.innerHTML = `<span class="text-emerald-400">⚡ Reading '${file.name}' and preparing its tabular rows...</span>`;
 
         // Try backend upload first if backend is reachable
         if (isBackendOnline) {
@@ -1145,7 +1391,10 @@
               return;
             }
           } catch (backendErr) {
-            console.warn('Backend upload failed, falling back to browser parsing:', backendErr);
+            console.warn(
+              'Backend upload failed, falling back to browser parsing:',
+              backendErr
+            );
           }
         }
 
@@ -1154,13 +1403,19 @@
           const res = await parseFileClientSide(file, targetBizId, categoryVal);
           saveLocalKnowledgeRecord(targetBizId, res);
 
-          const bizObj = definedBusinesses.find(b => b.id === targetBizId);
+          const bizObj = definedBusinesses.find((b) => b.id === targetBizId);
           if (bizObj) bizObj.table_count = (bizObj.table_count || 0) + 1;
 
           currentBusinessId = targetBizId;
+          updateActiveBusinessUI();
 
           const logMsg = `Ingested file '${file.name}' into business topic. Summary: ${res.summary}`;
-          addTrajectoryLog('Agent 3: Data Cleaning & Ingestion', 'File Ingestion', logMsg, 'SUCCESS');
+          addTrajectoryLog(
+            'Agent 3: Data Cleaning & Ingestion',
+            'File Ingestion',
+            logMsg,
+            'SUCCESS'
+          );
 
           statusText.innerHTML = `<span class="text-emerald-400 font-bold">✓ Ingestion Complete (Client Mode):</span> ${res.summary}`;
 
@@ -1182,12 +1437,15 @@
           name: name,
           description: `Custom business context '${name}'`,
           category: category || 'Custom Business',
-          table_count: 0
+          table_count: 0,
         };
         const storedCustom = getStoredCustomBusinesses();
-        if (!storedCustom.some(b => b.id === bid)) {
+        if (!storedCustom.some((b) => b.id === bid)) {
           storedCustom.push(newBiz);
-          localStorage.setItem('vco_custom_businesses', JSON.stringify(storedCustom));
+          localStorage.setItem(
+            'vco_custom_businesses',
+            JSON.stringify(storedCustom)
+          );
         }
         return newBiz;
       }
@@ -1211,7 +1469,11 @@
             const res = await fetch(`${API_BASE}/businesses`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: name, category: category, description: description }),
+              body: JSON.stringify({
+                name: name,
+                category: category,
+                description: description,
+              }),
             });
             if (res.ok) {
               const newBiz = await res.json();
@@ -1222,7 +1484,10 @@
               return;
             }
           } catch (err) {
-            console.warn('Backend topic creation failed, saving client side:', err);
+            console.warn(
+              'Backend topic creation failed, saving client side:',
+              err
+            );
           }
         }
 
@@ -1235,15 +1500,21 @@
 
       function addTrajectoryLog(agent, action, message, status = 'INFO') {
         const entry = {
-          timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+          timestamp: new Date()
+            .toISOString()
+            .replace('T', ' ')
+            .substring(0, 19),
           agent: agent,
           action: action,
           message: message,
-          status: status
+          status: status,
         };
         clientTrajectoryLogs.push(entry);
         try {
-          localStorage.setItem('vco_trajectory_logs', JSON.stringify(clientTrajectoryLogs));
+          localStorage.setItem(
+            'vco_trajectory_logs',
+            JSON.stringify(clientTrajectoryLogs)
+          );
         } catch (e) {}
       }
 
@@ -1302,12 +1573,20 @@
               activeTaskId = data.task_id;
               document.getElementById('activeTaskId').innerText = activeTaskId;
 
-              const hitlRes = await fetch(`${API_BASE}/audit/hitl/${activeTaskId}`);
+              const hitlRes = await fetch(
+                `${API_BASE}/audit/hitl/${activeTaskId}`
+              );
               const hitlData = await hitlRes.json();
 
-              document.getElementById('hitlTitle').innerText = hitlData.hitl_gate.title;
-              document.getElementById('hitlDescription').innerText = hitlData.hitl_gate.description;
-              document.getElementById('hitlPayload').innerText = JSON.stringify(hitlData.hitl_gate.payload, null, 2);
+              document.getElementById('hitlTitle').innerText =
+                hitlData.hitl_gate.title;
+              document.getElementById('hitlDescription').innerText =
+                hitlData.hitl_gate.description;
+              document.getElementById('hitlPayload').innerText = JSON.stringify(
+                hitlData.hitl_gate.payload,
+                null,
+                2
+              );
               document.getElementById('hitlPanel').classList.remove('hidden');
               fetchTrajectory();
               return;
@@ -1318,17 +1597,28 @@
         // Offline / Client Mode HITL Flow
         activeTaskId = `task_${Date.now()}`;
         document.getElementById('activeTaskId').innerText = activeTaskId;
-        document.getElementById('hitlTitle').innerText = 'Execution Plan & Data Source Access Approval';
-        document.getElementById('hitlDescription').innerText = 'Supervisor decomposed request into sub-goals requiring database extraction and client analytics.';
-        document.getElementById('hitlPayload').innerText = JSON.stringify({
-          target_topic: currentBusinessId,
-          proposed_audit: prompt,
-          risk_tier: 'HIGH',
-          data_sources: ['Ingested Client Knowledge Tables']
-        }, null, 2);
+        document.getElementById('hitlTitle').innerText =
+          'Execution Plan & Data Source Access Approval';
+        document.getElementById('hitlDescription').innerText =
+          'Supervisor decomposed request into sub-goals requiring database extraction and client analytics.';
+        document.getElementById('hitlPayload').innerText = JSON.stringify(
+          {
+            target_topic: currentBusinessId,
+            proposed_audit: prompt,
+            risk_tier: 'HIGH',
+            data_sources: ['Ingested Client Knowledge Tables'],
+          },
+          null,
+          2
+        );
         document.getElementById('hitlPanel').classList.remove('hidden');
 
-        addTrajectoryLog('Agent 1: Supervisor', 'Audit Intake', `Received controlling prompt: '${prompt}'`, 'INFO');
+        addTrajectoryLog(
+          'Agent 1: Supervisor',
+          'Audit Intake',
+          `Received controlling prompt: '${prompt}'`,
+          'INFO'
+        );
         fetchTrajectory();
       }
 
@@ -1343,7 +1633,9 @@
               body: JSON.stringify({
                 task_id: activeTaskId,
                 approved: approved,
-                feedback: approved ? 'Approved via Dashboard UI' : 'Cancelled by user',
+                feedback: approved
+                  ? 'Approved via Dashboard UI'
+                  : 'Cancelled by user',
               }),
             });
             if (res.ok) {
@@ -1357,12 +1649,37 @@
         // Offline response handling
         document.getElementById('hitlPanel').classList.add('hidden');
         if (approved) {
-          addTrajectoryLog('HITL Gate', 'Approval', 'User approved execution plan.', 'SUCCESS');
-          addTrajectoryLog('Agent 2: Data Retrieval', 'Data Analysis', 'Retrieved records from ingested knowledge base.', 'SUCCESS');
-          addTrajectoryLog('Agent 4: Diagnostic', 'Variance Analysis', 'Diagnostic analysis complete across active topic tables.', 'SUCCESS');
-          addTrajectoryLog('Agent 5: Reporting', 'Dashboard Delivery', 'Executive controlling report updated.', 'COMPLETED');
+          addTrajectoryLog(
+            'HITL Gate',
+            'Approval',
+            'User approved execution plan.',
+            'SUCCESS'
+          );
+          addTrajectoryLog(
+            'Agent 2: Data Retrieval',
+            'Data Analysis',
+            'Retrieved records from ingested knowledge base.',
+            'SUCCESS'
+          );
+          addTrajectoryLog(
+            'Agent 4: Diagnostic',
+            'Variance Analysis',
+            'Diagnostic analysis complete across active topic tables.',
+            'SUCCESS'
+          );
+          addTrajectoryLog(
+            'Agent 5: Reporting',
+            'Dashboard Delivery',
+            'Executive controlling report updated.',
+            'COMPLETED'
+          );
         } else {
-          addTrajectoryLog('HITL Gate', 'Rejection', 'User rejected execution plan.', 'REJECTED');
+          addTrajectoryLog(
+            'HITL Gate',
+            'Rejection',
+            'User rejected execution plan.',
+            'REJECTED'
+          );
         }
         fetchTrajectory();
       }
@@ -1380,7 +1697,8 @@
             });
             if (res.ok) {
               const data = await res.json();
-              document.getElementById('dynamicAgentWidgets').innerHTML = data.injected_component;
+              document.getElementById('dynamicAgentWidgets').innerHTML =
+                data.injected_component;
               fetchTrajectory();
               return;
             }
@@ -1398,7 +1716,12 @@
             <p class="text-slate-300">Agent 0 injected enhanced visual control widget into dashboard interface.</p>
           </div>
         `;
-        addTrajectoryLog('Agent 0: Office Meta-Builder', 'UI Enhancement', `Injected directive: '${directive}'`, 'SUCCESS');
+        addTrajectoryLog(
+          'Agent 0: Office Meta-Builder',
+          'UI Enhancement',
+          `Injected directive: '${directive}'`,
+          'SUCCESS'
+        );
         fetchTrajectory();
       }
 
@@ -1432,7 +1755,8 @@
           anthropic: 'sk-ant-...',
           serper: 'serper_key...',
         };
-        keyInput.placeholder = placeholders[currentApiProvider] || 'Enter key...';
+        keyInput.placeholder =
+          placeholders[currentApiProvider] || 'Enter key...';
       }
 
       async function saveApiSettings() {
