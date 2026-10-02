@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Controller Office — Dashboard with EDA Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="p-2 bg-indigo-600 rounded-lg text-white font-bold tracking-wider text-sm">VCO</div>
+            <div>
+                <h1 class="text-xl font-semibold tracking-wide">Virtual Controller Office</h1>
+                <p class="text-xs text-slate-400">Agentic Audit & Financial Control Platform (v4 with Exploratory Data Analytics)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                ● EDA Module Active
+            </span>
+            <div class="text-xs text-slate-300">HITL Gatekeeper: <span class="font-bold text-indigo-400">ACTIVE</span></div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+
+        <!-- SECTION 1: DESCRIPTIVE ANALYTICS & EDA (Pandas + Seaborn) -->
+        <section class="bg-slate-800 border border-indigo-500/30 rounded-xl p-6 shadow-xl space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h2 class="text-base font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+                        <span>📈</span> Section 1: Exploratory Data Analysis & Descriptive Analytics
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Automated statistical breakdown powered by Pandas, NumPy, and Seaborn</p>
+                </div>
+                <div class="flex gap-2 text-xs">
+                    <button onclick="switchEdaTab('outliers')" id="tab-outliers" class="px-3 py-1.5 rounded-lg font-medium bg-indigo-600 text-white transition">Outliers & Boxplots</button>
+                    <button onclick="switchEdaTab('heatmap')" id="tab-heatmap" class="px-3 py-1.5 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Correlation Heatmap</button>
+                    <button onclick="switchEdaTab('counts')" id="tab-counts" class="px-3 py-1.5 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Value Counts & Barplots</button>
+                    <button onclick="switchEdaTab('pairplot')" id="tab-pairplot" class="px-3 py-1.5 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition">Multivariate Pairplots</button>
+                </div>
+            </div>
+
+            <!-- Tab Content 1: Outliers -->
+            <div id="eda-outliers" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">Distribution & Outlier Analysis</span>
+                    <h3 class="text-lg font-bold text-slate-100">Carrier Net Variance Outlier Identification</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Using Seaborn boxplots and IQR outlier filtering on <code class="text-indigo-300 bg-slate-950 px-1 py-0.5 rounded">fact_logistics_q3</code>, we identify extreme fuel surcharge spikes across EU Central carriers. DB Schenker and FedEx Freight exhibit severe upper-tail anomalies exceeding <strong>+$10,000 per shipment</strong>.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+                        # Python Outlier Filtering Snippet<br>
+                        q1 = df['net_variance'].quantile(0.25)<br>
+                        q3 = df['net_variance'].quantile(0.75)<br>
+                        iqr = q3 - q1<br>
+                        outliers = df[df['net_variance'] > (q3 + 1.5 * iqr)]
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                    <img src="eda_outliers_boxplot.png" alt="Outliers Boxplot" class="rounded-lg max-h-[320px] mx-auto shadow">
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Correlation Heatmap -->
+            <div id="eda-heatmap" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center hidden">
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded border border-indigo-500/20">Correlation Matrix</span>
+                    <h3 class="text-lg font-bold text-slate-100">Fuel Surcharges Drive 88% of Net Variance</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Seaborn correlation heatmap (<code class="text-indigo-300 bg-slate-950 px-1 py-0.5 rounded">cmap='coolwarm'</code>) reveals a strong positive correlation (<strong>r = +0.74 to +0.88</strong>) between actual fuel surcharges and total financial cost variance, proving that rate inflation—not volume surge—is the dominant driver.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-indigo-300 overflow-x-auto">
+                        corr = df[['actual_fuel', 'budget_fuel', 'net_variance']].corr()<br>
+                        sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f')
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                    <img src="eda_correlation_heatmap.png" alt="Correlation Heatmap" class="rounded-lg max-h-[320px] mx-auto shadow">
+                </div>
+            </div>
+
+            <!-- Tab Content 3: Value Counts -->
+            <div id="eda-counts" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center hidden">
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">Categorical Frequency & Distribution</span>
+                    <h3 class="text-lg font-bold text-slate-100">Carrier Shipment Counts & Department Breakdown</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Categorical distribution analysis via Pandas <code class="text-indigo-300 bg-slate-950 px-1 py-0.5 rounded">value_counts()</code> shows FedEx Freight (62 runs) and DB Schenker (61 runs) account for over 44% of total EU Central volume. Departmental aggregations confirm Logistics represents <strong>$88,727</strong> of total variance.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-amber-300 overflow-x-auto">
+                        carrier_counts = df['carrier'].value_counts()<br>
+                        sns.barplot(x=carrier_counts.values, y=carrier_counts.index)
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                    <img src="eda_value_counts_barplots.png" alt="Value Counts Barplots" class="rounded-lg max-h-[320px] mx-auto shadow">
+                </div>
+            </div>
+
+            <!-- Tab Content 4: Pairplot -->
+            <div id="eda-pairplot" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center hidden">
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">Multivariate Analysis</span>
+                    <h3 class="text-lg font-bold text-slate-100">Pairwise Relationships & KDE Kernel Density</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        Multivariate pairplot analysis (<code class="text-indigo-300 bg-slate-950 px-1 py-0.5 rounded">sns.pairplot</code>) examines pairwise relationships across actual volume, budget fuel, actual fuel, and net variance with diagonal KDE density distributions.
+                    </p>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-x-auto">
+                        sns.pairplot(df[['volume', 'fuel_actual', 'net_variance']], diag_kind='kde')
+                    </div>
+                </div>
+                <div class="bg-slate-950 p-2 rounded-xl border border-slate-800 text-center">
+                    <img src="eda_pairplot_logistics.png" alt="Pairplot Analysis" class="rounded-lg max-h-[320px] mx-auto shadow">
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: 5-STAGE CONTROLLER CLOSE WORKFLOW -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Column (2 cols): Controlling Report & HITL -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Agent 0 UI Enhancer Bar -->
+                <section class="bg-slate-800/80 border border-indigo-500/30 rounded-xl p-4 shadow-lg">
+                    <h2 class="text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-2 flex items-center gap-1.5">
+                        <span>⚡</span> Agent 0 (Meta-Builder) Live UI Directive
+                    </h2>
+                    <form id="enhanceForm" onsubmit="handleEnhanceUI(event)" class="flex gap-2">
+                        <input type="text" id="enhanceInput" 
+                            class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:ring-1 focus:ring-indigo-500 focus:outline-none" 
+                            placeholder="e.g., Add a fuel surcharge variance gauge widget for EU Central carriers.">
+                        <button type="submit" class="bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs px-4 py-1.5 rounded-lg font-medium transition">
+                            Enhance App UI
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Audit Findings & Summary -->
+                <section id="reportPanel" class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg space-y-4">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 border-b border-slate-700 pb-2 flex justify-between">
+                        <span>📊 Controlling Audit Report & Mitigated EAC</span>
+                        <span id="reportStatus" class="text-xs text-emerald-400 font-normal">Ready</span>
+                    </h2>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50">
+                            <div class="text-xs text-slate-400">Net Cost Variance</div>
+                            <div id="netVarianceVal" class="text-xl font-bold text-rose-400">+$240,000</div>
+                            <div class="text-[10px] text-slate-500">+12.4% over budget</div>
+                        </div>
+                        <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50">
+                            <div class="text-xs text-slate-400">Primary Driver</div>
+                            <div id="primaryDriverVal" class="text-xl font-bold text-amber-400">Fuel Surcharges</div>
+                            <div class="text-[10px] text-slate-500">68% of total variance</div>
+                        </div>
+                        <div class="bg-slate-900 p-3.5 rounded-lg border border-slate-700/50">
+                            <div class="text-xs text-slate-400">Q4 Forecast Impact</div>
+                            <div id="forecastImpactVal" class="text-xl font-bold text-indigo-400">+$180,000</div>
+                            <div class="text-[10px] text-slate-500">Mitigated scenario</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column (1 col): Agent Trajectory Log -->
+            <div class="space-y-6">
+                <section class="bg-slate-800 border border-slate-700 rounded-xl p-5 shadow-lg flex flex-col h-full">
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 mb-3 flex items-center justify-between">
+                        <span>⚡ Agent Trajectory Feed</span>
+                        <button onclick="fetchTrajectory()" class="text-[10px] text-indigo-400 hover:underline">Refresh</button>
+                    </h2>
+                    <div id="trajectoryFeed" class="space-y-2.5 text-xs font-mono overflow-y-auto max-h-[420px] pr-1">
+                        <div class="p-2.5 bg-slate-900 rounded border-l-2 border-indigo-500 text-slate-300">
+                            <span class="text-indigo-400 font-bold">[Agent 1 Supervisor]</span> System initialized. EDA module ready.
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function switchEdaTab(tabName) {
+            ['outliers', 'heatmap', 'counts', 'pairplot'].forEach(t => {
+                document.getElementById(`eda-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = "px-3 py-1.5 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition";
+            });
+            document.getElementById(`eda-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = "px-3 py-1.5 rounded-lg font-medium bg-indigo-600 text-white transition";
+        }
+    </script>
+</body>
+</html>

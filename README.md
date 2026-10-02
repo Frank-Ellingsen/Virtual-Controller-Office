@@ -99,3 +99,11 @@ Below is the structured inventory of all configuration manifests, backend code, 
 The static dashboard can be opened directly from [GitHub Pages](https://frank-ellingsen.github.io/Virtual-Controller-Office/). Select **Premier League & Sports Analytics**, upload `Local Data/Sports/premier_league_games.xlsx`, and the dashboard calculates match counts, home-win rate, goals per match, and season-level results in the browser. Uploaded rows and results persist in that browser profile.
 
 GitHub Pages does not run the FastAPI/DuckDB backend. In browser mode, uploads are not sent to a shared database and the audit/HITL trajectory is a local demo flow; deploy the API separately if you need shared storage or server-backed agent execution.
+
+## GitHub Copilot Resources
+
+- [Repository-wide Copilot instructions](.github/copilot-instructions.md) — architecture context, SQL/HITL safety, and repository conventions.
+- [Copilot architecture guide](docs/copilot-architecture-guide.md) — component map, implementation notes, and development prompt recipes.
+- [Copilot prompt templates](docs/copilot-prompt-templates.md) — schema-aware starting prompts for DAX and DuckDB work.
+
+The original source guides are retained in `Copilot md files/`. The copied prompt examples are guidance; verify current APIs, tables, and columns before relying on them.
